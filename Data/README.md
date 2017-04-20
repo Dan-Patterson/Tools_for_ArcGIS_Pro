@@ -5,7 +5,7 @@ Just some structured array data for testing purposes.
 Download and load with *np.load(array)*
 The arrays contain the same information created with a fixed proportion of different sizes.
 
-*sample_100k.npy*
+*sample_100k.npy* (7,423 KB)
 
 100,000 records (a.shape  (100000,)) with a data type of...
 
