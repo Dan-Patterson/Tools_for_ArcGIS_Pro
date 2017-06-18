@@ -38,9 +38,11 @@ http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
 
-I have always thought that Frequency should be available at all license levels.  Give this a try.  The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
+The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
 1. Frequency analysis
+
+* I have always thought that the Frequency tool should be available at all license levels.  Give it a try.
 
 2. Table to Text
 
