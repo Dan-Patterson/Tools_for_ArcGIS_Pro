@@ -13,6 +13,9 @@ def ddm_ddd(a, sep=" "):
     """ convert degree, decimal minute string to decimal degrees
     : a - degree, decimal minute string
     : sep - usually a space, but check
+    : Useage - ddm_ddd(!SourceField!, sep=" ")
+    :    python parser, sourcefield is the input string field, destination
+    :    field is type double
     """
     d, m = [float(i) for i in a.split(sep)]
     sign = [-1, 1][d > 0]
@@ -24,6 +27,9 @@ def dms_ddd(a, sep=" "):
     """ convert degree, minute, decimal second string to decimal degrees
     : a - degree, minute, decimal second string
     : sep - usually a space, but check
+    : Useage - dms_ddd(!SourceField!, sep=" ")
+    :    python parser, sourcefield is the input string field, destination
+    :    field is type double
     """
     d, m, s = [float(i) for i in a.split(sep)]
     sign = [-1, 1][d > 0]
@@ -32,9 +38,7 @@ def dms_ddd(a, sep=" "):
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":
-    """Optionally...
-    : - print the script source name.
-    : - run the _demo
+    """Samples
     """
     a = '45 30.30'
     b = '-75 45.45'
