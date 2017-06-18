@@ -40,11 +40,12 @@ http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
 
 I have always thought that Frequency should be available at all license levels.  Give this a try.  The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
-(1) Frequency analysis
+1. Frequency analysis
 
-(2) Table to Text
+2. Table to Text
 
-    This tool facilitates getting a textual representation of table data in a .txt format for presentation and documentation processes.
+* This tool facilitates getting a textual representation of table data in a .txt format for presentation and documentation processes.
+
 
 ### **all_scripts**
 
