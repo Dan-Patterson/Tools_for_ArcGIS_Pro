@@ -1,7 +1,7 @@
-## Alt-H2 __***Tools for ArcGIS Pro***__
+## __***Tools for ArcGIS Pro***__
 
 
-**Python Code Samples**
+### **Python Code Samples**
 
 A repository for Python Code Samples, largely associated with ArcGIS software but some standalone applications.
 
@@ -10,12 +10,12 @@ Toolboxes are contained in separate folders.  Each folder has a scripts folder c
 To use, all you need to do is download scripts folder and the toolbox and install in your working path or in a path accessible to all projects.
 
 
-**field_calculator**
+### **field_calculator**
 
 This folder is a collection of scripts which contain defs which can be used in other modules or specifically, they can be used in the field calculator in ArcGIS Pro or ArcMap.  The header contains useage information, and a python parser is assumed in all cases.  Check the respective help documentation on how to use the field calculator from within a table or the Calculate Field tool in Pro.
 
 
-**point_tools**
+### **point_tools**
 
 This folder contains a toolbox and associated script(s) for ArcGIS Pro to work with points.  Also found at
 http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
@@ -33,7 +33,7 @@ http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 
 (6)Â  Whatever else I forgot to mention.
 
-**table_tools**
+### **table_tools**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
@@ -46,7 +46,7 @@ I have always thought that Frequency should be available at all license levels.Â
 
     This tool facilitates getting a textual representation of table data in a .txt format for presentation and documentation processes.
 
-**all_scripts**
+### **all_scripts**
 
 The scripts for the toolboxes as separate entities for those that just need the script for other purposes.  Be aware of any dependencies in the scripts if they are specified.
 
