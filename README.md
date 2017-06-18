@@ -49,6 +49,16 @@ The foundations is the ability of NumPy to perform rudimentary array operations 
 * This tool facilitates getting a textual representation of table data in a .txt format for presentation and documentation processes.
 
 
+-------------------------
+### **DATA**
+
+The DATA folder contains a number of numpy arrays (structured arrays specifically) that contain the same fixed proportions of data types but contain a variety of record lengths.  These arrays can be used to standard your testing when you need to work with tabular data with known properties and you need to assess the affect of table size on processing times. 
+
+The arrays can be brought into ArcMap or ArcGIS Pro using the arcpy.da module's **NumPyArrayToTable** and returned to array format using **TableToNumPyArray**
+
+More data constructs will be added as needed.
+
+
 ### **all_scripts**
 
 The scripts for the toolboxes as separate entities for those that just need the script for other purposes.  Be aware of any dependencies in the scripts if they are specified.
