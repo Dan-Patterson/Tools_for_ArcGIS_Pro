@@ -22,5 +22,5 @@ def angle_between(shape, from_north):
     x0 = x
     y0 = y
     return angle
-__esri_field_calculator_splitter__
-angle_between(!Shape!, True)
+#__esri_field_calculator_splitter__
+#angle_between(!Shape!, True)
