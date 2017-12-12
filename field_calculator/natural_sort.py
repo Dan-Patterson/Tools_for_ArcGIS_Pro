@@ -1,14 +1,36 @@
+# -*- coding: UTF-8 -*-
+"""
+:Script:   natural_sort.py
+:Author:   Dan.Patterson@carleton.ca
+:Modified: 2017-08-23
+:Purpose:  Returns a mixed text-number list accounting for numeric values
+:  ['a1', 'a20', 'a2', 'a10'] should yield ['a1', 'a2', 'a10', 'a20']
+:Note:
+: C:\Git_Dan\JupyterNoteBooks\Short_Samples\Natural_sort.ipynb
+"""
+
 import re
-def natsort(lst):
-    """natural sort"""
-    import re
-    convert = lambda text: int(text) if text.isdigit() else text
-    a_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
-    return sorted(lst, key=a_key)
+
+
+def natsort(text_lst):
+    """natural sort returns text containing numbers sorted considering the
+    :  number in the sequence.
+    :originals used lambda expressions
+    :  convert = lambda text: int(text) if text.isdigit() else text
+    :  a_key = lambda key: [convert(c) for c in re.split('([0-9]+)', key)]
+    """
+    def convert(text):
+        return int(text) if text.isdigit() else text
+
+    def a_key(key):
+        return [convert(c) for c in re.split('([0-9]+)', key)]
+
+    return sorted(text_lst, key=a_key)
+
+
+# --------------------------------------------------------------------------
 if __name__ == '__main__':
-    a = ['r1', 'r1', 'r1', 'r4', 'r4', 'r7', 'r7', 'r7', 'r10', 'r10']
-    b = sorted(a)
-    print("input - \n{}".format(a))
-    print("text sort - \n{}".format(b))
+    """run with sample"""
+    a = ['a1', 'a20', 'a2', 'a10']
     vals = natsort(a)
-    print("natural sort - \n{}".format(vals))
+#    print("natural sort - \n{}".format(vals))
