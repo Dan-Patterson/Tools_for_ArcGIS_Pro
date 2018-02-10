@@ -40,11 +40,15 @@ http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
-1. Frequency analysis
+1.  Concatenate fields
+
+*  Concatenate fields together regardless of the data type and stripping 'null' values from the fields.  A good demonstration on how to use TableToNumPy array and ExtendTable 
+
+2. Frequency analysis
 
 * I have always thought that the Frequency tool should be available at all license levels.  Give it a try.
 
-2. Table to Text
+3. Table to Text
 
 * This tool facilitates getting a textual representation of table data in a .txt format for presentation and documentation processes.
 
