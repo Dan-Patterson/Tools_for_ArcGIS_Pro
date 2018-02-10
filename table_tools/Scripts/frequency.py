@@ -85,7 +85,7 @@ out_tbl = sys.argv[2]          # results table
 cls_flds = sys.argv[3]         # classification field(s)
 sum_flds = sys.argv[4]         # fields for doing sums on
 
-cls_flds = cls_flds.split(";") # tidy up the two field inputs
+cls_flds = cls_flds.split(";")  # tidy up the two field inputs
 sum_flds = sum_flds.split(";")
 
 a = arcpy.da.TableToNumPyArray(in_tbl, "*")  # use the full array's data
