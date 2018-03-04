@@ -2,26 +2,19 @@
 """
 :Script:   densify_geom.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-11-30
+:Modified: 2018-01-16
 :Purpose:  Densify geometry by a factor.
 :Notes:
 :  Uses functions from 'arraytools'.  These have been consolidated here.
-
-p0 results
-_den(a) 154 µs ± 19 µs per loop (mean ± std. dev. of 7 runs, 1000 loops each)
-_den2(a) 36.4 µs ± 2.48 µs per loop (mean ± std 7 runs, 10000 loops each)
-_den3(a) 18.6 µs ± 1.77 µs per loop (mean ± std. dev. of 7 runs, 10000 loops each)
-_den4(a) 13 µs ± 512 ns per loop (mean ± std. dev. of 7 runs, 100000 loops each)
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
 import arcpy
-from geom_helper import fc_info, _describe, tweet
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.3f}'.format}
 
+ft = {'bool': lambda x: repr(x.astype('int32')),
+      'float_kind': '{: 0.3f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -31,6 +24,96 @@ script = sys.argv[0]  # print this should you need to locate the script
 
 # ---- array functions -------------------------------------------------------
 #
+def _flat_(a_list, flat_list=None):
+    """Change the isinstance as appropriate
+    :  Flatten an object using recursion
+    :  see: itertools.chain() for an alternate method of flattening.
+    """
+    if flat_list is None:
+        flat_list = []
+    for item in a_list:
+        if isinstance(item, (list, tuple, np.ndarray, np.void)):
+            _flat_(item, flat_list)
+        else:
+            flat_list.append(item)
+    return flat_list
+
+
+def _O_nd(obj, out=None):
+    """Flatten type 'O' arrays to ndarray, using recursion
+    :Note: append retains internal shape, extend will flatten
+    :  nested lists into a list
+    """
+    if out is None:
+        out = []
+    sub_out = []
+    for el in obj:
+        el = np.asarray(el)
+        if el.dtype.kind in ('O', 'V'):
+            sub_out.append(_O_nd(el, out))  # ---- recursion needed ---
+        else:
+            out.extend(el)  # was append
+    return out
+
+def _densify_2D(a, fact=2):
+    """Densify a 2D array using np.interp.
+    :fact - the factor to density the line segments by
+    :Notes
+    :-----
+    :original construction of c rather than the zero's approach
+    :  c0 = c0.reshape(n, -1)
+    :  c1 = c1.reshape(n, -1)
+    :  c = np.concatenate((c0, c1), 1)
+    """
+    # Y = a changed all the y's to a
+    a = np.squeeze(a)
+    n_fact = len(a) * fact
+    b = np.arange(0, n_fact, fact)
+    b_new = np.arange(n_fact - 1)     # Where you want to interpolate
+    c0 = np.interp(b_new, b, a[:, 0])
+    c1 = np.interp(b_new, b, a[:, 1])
+    n = c0.shape[0]
+    c = np.zeros((n, 2))
+    c[:, 0] = c0
+    c[:, 1] = c1
+    return c
+
+
+# ---- featureclass functions ------------------------------------------------
+#
+def fc_info(in_fc, prn=False):
+    """Return basic featureclass information, including...
+    :
+    : shp_fld  - field name which contains the geometry object
+    : oid_fld  - the object index/id field name
+    : SR       - spatial reference object (use SR.name to get the name)
+    : shp_type - shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
+    : - others: 'areaFieldName', 'baseName', 'catalogPath','featureType',
+    :   'fields', 'hasOID', 'hasM', 'hasZ', 'path'
+    : - all_flds =[i.name for i in desc['fields']]
+    """
+    desc = arcpy.da.Describe(in_fc)
+    args = ['shapeFieldName', 'OIDFieldName', 'shapeType', 'spatialReference']
+    shp_fld, oid_fld, shp_type, SR = [desc[i] for i in args]
+    if prn:
+        frmt = "FeatureClass:\n   {}".format(in_fc)
+        f = "\n{!s:<16}{!s:<14}{!s:<10}{!s:<10}"
+        frmt += f.format(*args)
+        frmt += f.format(shp_fld, oid_fld, shp_type, SR.name)
+        tweet(frmt)
+    else:
+        return shp_fld, oid_fld, shp_type, SR
+
+
+def tweet(msg):
+    """Print a message for both arcpy and python.
+    : msg - a text message
+    """
+    m = "\n{}\n".format(msg)
+    arcpy.AddMessage(m)
+    print(m)
+    print(arcpy.GetMessages())
+
 
 def _get_shapes(in_fc):
     """Get shapes from a featureclass, in_fc, using SHAPE@ returning
@@ -69,26 +152,14 @@ def _get_attributes(in_fc):
     """
     dt_b = [('IDs', '<i4'), ('Xc', '<f8'), ('Yc', '<f8')]
     b = _ndarray(in_fc, to_pnts=False)
-    dt_b.extend(b.dtype.descr[2:])
+    dt = [[n, t] for n, t in b.dtype.descr[2:]]
+    for i in dt:
+        if i[0] in ["Shape_Length", "Shape_Area", "Shape"]:
+            i[0] = i[0] + "_orig"
+    dt = [tuple(i) for i in dt]
+    dt_b.extend(dt)
     b.dtype = dt_b
     return b
-
-
-def _O_nd(obj, out=None):
-    """Flatten type 'O' arrays to ndarray, using recursion
-    :Note: append retains internal shape, extend will flatten
-    :  nested lists into a list
-    """
-    if out is None:
-        out = []
-    sub_out = []
-    for el in obj:
-        el = np.asarray(el)
-        if el.dtype.kind in ('O', 'V'):
-            sub_out.append(_O_nd(el, out))  # ---- recursion needed ---
-        else:
-            out.extend(el)  # was append
-    return out
 
 
 def obj_shapes(in_, SR):
@@ -121,43 +192,20 @@ def arcpnts_poly(in_, out_type='Polygon', SR=None):
     """
     s = []
     for i in in_:
-        arr = arcpy.Array(i)
-        if out_type == 'Polyline':
-            g = arcpy.Polyline(arr, SR)
-        elif out_type == 'Polygon':
-            g = arcpy.Polygon(arr, SR)
-        elif out_type == 'Points':
-            g = arcpy.arcpy.Multipoint(arr[0], SR)
-        s.append(g)
+        for j in i:
+            if out_type == 'Polygon':
+                g = arcpy.Polygon(arcpy.Array(j), SR)
+            elif out_type == 'Polyline':
+                g = arcpy.Polyline(arcpy.Array(j), SR)
+            elif out_type == 'Points':
+                j = _flat_(j)
+                g = arcpy.Multipoint(arcpy.Array(j), SR)  # check
+            s.append(g)
     return s
 
 
-def _densify_2D(a, fact=2):
-    """Densify a 2D array using np.interp.
-    :fact - the factor to density the line segments by
-    :Notes
-    :-----
-    :original construction of c rather than the zero's approach
-    :  c0 = c0.reshape(n, -1)
-    :  c1 = c1.reshape(n, -1)
-    :  c = np.concatenate((c0, c1), 1)
-    """
-    # Y = a changed all the y's to a
-    a = np.squeeze(a)
-    n_fact = len(a) * fact
-    b = np.arange(0, n_fact, fact)
-    b_new = np.arange(n_fact - 1)     # Where you want to interpolate
-    c0 = np.interp(b_new, b, a[:, 0])
-    c1 = np.interp(b_new, b, a[:, 1])
-    n = c0.shape[0]
-    c = np.zeros((n, 2))
-    c[:, 0] = c0
-    c[:, 1] = c1
-    return c
-
-
-def _out(a, fact=2):
-    """Do the shape conversion for the parts
+def _convert(a, fact=2):
+    """Do the shape conversion for the array parts.  Calls to _densify_2D
     """
     out = []
     parts = len(a)
@@ -184,14 +232,14 @@ def densify(polys, fact=2, sp_ref=None):
     :
     :Requires:
     :--------
-    : _den - the function that is called for each shape part
+    : _densify_2D - the function that is called for each shape part
     : _unpack - unpack objects
     """
     # ---- main section ----
     out = []
     for poly in polys:
         p = poly.__geo_interface__['coordinates']
-        back = _out(p, fact)
+        back = _convert(p, fact)
         out.append(back)
     return out
 
@@ -202,12 +250,12 @@ def densify(polys, fact=2, sp_ref=None):
 def _demo():
     """run when script is in demo mode"""
     pth = script.replace('densify_geom.py', '')
-    in_fc = pth + '/geom_data.gdb/Polygon'
+    in_fc = pth + '/geom_data.gdb/polygon_demo'
 #    in_fc = r"C:\Git_Dan\a_Data\testdata.gdb\Carp_5x5"   # full 25 polygons
 #    in_fc = r"C:\Git_Dan\a_Data\arcpytools_demo.gdb\xy1000_tree"
-    out_fc = pth + '/geom_data.gdb/x'
+    out_fc = pth + '/geom_data.gdb/x1'
     fact = 2
-    out_type = 'Polygon'
+    out_type = 'Polygon'  # 'Polyline' or 'Points'
     testing = True
     return in_fc, out_fc, fact, out_type, testing
 
@@ -226,9 +274,11 @@ def _tool():
 #
 # (1) check to see if in demo or tool mode
 # (2) obtain fc information
-# (3) split the fc into two arrays, one geometry, the 2nd attributes
-# (4) obtain the shapes and densify
-# (5) optionally produce the output fc
+# (3) convert multipart to singlepart
+# (4) split the fc into two arrays, one geometry, the 2nd attributes
+# (5) obtain the shapes and densify
+# (6) optionally produce the output fc
+# (7) join the attributes back
 
 if len(sys.argv) == 1:
     in_fc, out_fc, fact, out_type, testing = _demo()
@@ -237,20 +287,21 @@ else:
 
 shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
 
-
-# ---- produce output --------------------------------------------------------
-
-polys = _get_shapes(in_fc)
-out = densify(polys, fact=fact, sp_ref=SR)  # use for xy1000_tree only
-#p0, p1, p2 = polys
-#b = _get_attributes(in_fc)
-#out = densify([p0, p1], fact=2, sp_ref=SR)
-#arrs = _un(out, None)
-out_shps = arcpnts_poly(out, out_type=out_type, SR=SR)
+temp = out_fc + "tmp"
+if arcpy.Exists(temp):
+    arcpy.Delete_management(temp)
+arcpy.MultipartToSinglepart_management(in_fc, temp)
+polys = _get_shapes(temp)
+a = densify(polys, fact=fact, sp_ref=SR)
+b = _get_attributes(temp)
+out_shps = arcpnts_poly(a, out_type=out_type, SR=SR)
 if not testing:
     if arcpy.Exists(out_fc):
         arcpy.Delete_management(out_fc)
     arcpy.CopyFeatures_management(out_shps, out_fc)
+    arcpy.da.ExtendTable(out_fc, 'OBJECTID', b, 'IDs')
+# ---- cleanup
+arcpy.Delete_management(temp)
 
 
 # ----------------------------------------------------------------------

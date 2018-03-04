@@ -2,9 +2,10 @@
 """
 :Script:   sampling_grid.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-12-07
+:Modified: 2018-01-28
 :Purpose:  tools for working with numpy arrays
-:Useage:
+:Source:
+: http://www.arcgis.com/home/item.html?id=ddb2deec9b5e4a09affe60de68f5ff4e
 :
 :References:
 :----------
@@ -24,14 +25,14 @@
 """
 # ---- imports, formats, constants ----
 import sys
+from textwrap import dedent
 import numpy as np
 import arcpy
 
 arcpy.overwriteOutputs = True
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.3f}'.format}
-
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.3f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -155,6 +156,17 @@ def output_polygons(output_shp, SR, pnts):
     if arcpy.Exists(output_shp):     # overwrite any existing versions
         arcpy.Delete_management(output_shp)
     arcpy.CopyFeatures_management(polygons, output_shp)
+    return output_shp
+
+
+def extend_tbl(output_shp, rows, cols):
+    shp = rows*cols
+    code_fld = np.empty((shp,), dtype=[('IDs', '<i4'), ('Grid_codes', '<U3')])
+    codes = code_grid(cols=cols, rows=rows, zero_based=False,
+                      shaped=True, bottom_up=False).ravel()
+    code_fld['IDs'] = np.arange(1, shp+1)
+    code_fld['Grid_codes'] = codes
+    arcpy.da.ExtendTable(output_shp, 'OBJECTID', code_fld, 'IDS')
 
 
 msg = """
@@ -170,6 +182,7 @@ msg = """
 : --------------------------------------------------------------------
 """
 
+
 def _demo(seed=None, out_fc=False, SR=None, corner=[0, 0], angle=0):
     """Generate the grid using the specified or default parameters
     """
@@ -177,15 +190,15 @@ def _demo(seed=None, out_fc=False, SR=None, corner=[0, 0], angle=0):
     dx, dy = [1, 1]
     cols, rows = [3, 3]
     if seed is None:
-        seed = rectangle(dx=1, dy=1, cols=3, rows=3)
-#        seed = hex_pointy(dx=10, dy=10, cols=3, rows=3)
+#        seed = rectangle(dx=1, dy=1, cols=3, rows=3)
+        seed = hex_pointy(dx=10, dy=10, cols=3, rows=3)
 #        seed = hex_flat(dx=10, dy=10, cols=3, rows=3)
         seed_t = 'rectangle'
     if SR is None:
         SR = 3857  # -- WGS84 Web Mercator (Auxiliary Sphere)
     pnts = repeat(seed=seed, corner=corner, cols=3, rows=3, angle=0)
     args = ["", SR, seed_t, corner, [dx, dy], [cols, rows], seed[0]]
-    print(msg.format(*args))
+    print(dedent(msg).format(*args))
     return pnts
 
 
@@ -194,14 +207,16 @@ def _tool():
     out_fc = sys.argv[1]  #
     SR = sys.argv[2]
     seed_t = sys.argv[3]
-    corn_x = float(sys.argv[4])
-    corn_y = float(sys.argv[5])
-    dx = float(sys.argv[6])
-    dy = float(sys.argv[7])
-    cols = int(sys.argv[8])
-    rows = int(sys.argv[9])
+    xtent = [float(i) for i in sys.argv[4].split(" ")]
+    L, B, R, T = xtent
+    corn_x = L  # float(sys.argv[4])
+    corn_y = T  # float(sys.argv[5])
+    dx = float(sys.argv[5])
+    dy = float(sys.argv[6]) * -1.0
+    cols = int(sys.argv[7])
+    rows = int(sys.argv[8])
     #
-    angle = float(sys.argv[10])
+    angle = float(sys.argv[9])
     corner = [corn_x, corn_y]
     if seed_t == 'rectangle':
         seed = rectangle(dx, dy, cols, rows)
@@ -216,6 +231,7 @@ def _tool():
     : --------------------------------------------------------------------
     : output {}
     : SR  .. {}
+    : extent .. {}
     : type . {}
     : corner .. {}
     : size..... {} (dx, dy)
@@ -223,26 +239,29 @@ def _tool():
     : sample seed
     {}
     """
-    args = [out_fc, SR, seed_t, corner, [dx, dy], [cols, rows], seed[0]]
-    arcpy.AddMessage(msg.format(*args))
+    args = [out_fc, SR, xtent, seed_t, corner, [dx, dy],
+            [cols, rows], seed[0]]
+    arcpy.AddMessage(dedent(msg).format(*args))
     arcpy.GetMessages()
     pnts = repeat(seed=seed, corner=corner, cols=cols, rows=rows, angle=angle)
-    return out_fc, SR, pnts
+    return out_fc, SR, pnts, rows, cols
 
 
 # ----------------------------------------------------------------------
-# __main__ .... code section
+# .... final code section producing the featureclass and extendtable
 if len(sys.argv) == 1:
     testing = True
     pnts = _demo()
 else:
     testing = False
-    out_fc, SR, pnts = _tool()
+    out_fc, SR, pnts, rows, cols = _tool()
 #
 if not testing:
-    output_polygons(out_fc, SR, pnts)
+    output_shp = output_polygons(out_fc, SR, pnts)
+    extend_tbl(output_shp, rows, cols)
     print('\nSampling grid was created... {}'.format(out_fc))
 
+# ----------------------------------------------------------------------
 #
 if __name__ == "__main__":
     """Optionally...
