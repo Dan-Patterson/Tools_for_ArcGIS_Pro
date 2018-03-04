@@ -19,24 +19,46 @@
 import sys
 import numpy as np
 import arcpy
-from arraytools import e_dist
 from arcpytools import fc_info, tweet
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.1f}'.format}
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.1f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=120, precision=2,
                     suppress=True, threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')
 
 script = sys.argv[0]
 
+
 # ---- functions ----
+def e_dist(a, b, metric='euclidean'):
+    """Distance calculation for 1D, 2D and 3D points using einsum
+    : a, b   - list, tuple, array in 1,2 or 3D form
+    : metric - euclidean ('e','eu'...), sqeuclidean ('s','sq'...),
+    :-----------------------------------------------------------------------
+    """
+    a = np.asarray(a)
+    b = np.atleast_2d(b)
+    a_dim = a.ndim
+    b_dim = b.ndim
+    if a_dim == 1:
+        a = a.reshape(1, 1, a.shape[0])
+    if a_dim >= 2:
+        a = a.reshape(np.prod(a.shape[:-1]), 1, a.shape[-1])
+    if b_dim > 2:
+        b = b.reshape(np.prod(b.shape[:-1]), b.shape[-1])
+    diff = a - b
+    dist_arr = np.einsum('ijk,ijk->ij', diff, diff)
+    if metric[:1] == 'e':
+        dist_arr = np.sqrt(dist_arr)
+    dist_arr = np.squeeze(dist_arr)
+    return dist_arr
 
 
 def to_array(in_fc):
     """Extract the shapes and produce a coordinate array.
     """
-    shp_fld, oid_fld, SR = fc_info(in_fc)
+    shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
     in_flds = [oid_fld, shp_fld]
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, in_flds)
     a = a[shp_fld]

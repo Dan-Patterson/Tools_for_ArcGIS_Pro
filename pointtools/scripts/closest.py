@@ -21,8 +21,8 @@ from arcpytools import fc_info, tweet
 
 # from textwrap import dedent
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.1f}'.format}
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.1f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=120, precision=2,
                     suppress=True, threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')
@@ -125,7 +125,7 @@ def connect(in_fc, out_fc, N=1, testing=False):
     """Run the analysis to form the closest point pairs.
     :  Calls n_near to produce the nearest features.
     """
-    shp_fld, oid_fld, SR = fc_info(in_fc)
+    shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, "*", "", SR)
     dt = '<f8'
     b = np.array([tuple(i) for i in a[shp_fld]], dtype=dt)
@@ -158,8 +158,8 @@ def connect(in_fc, out_fc, N=1, testing=False):
     else:
         return a, b, r0, r1, r2, r3
 
-# ---- Run the analysis ----
 
+# ---- Run the analysis ----
 frmt = """\n
 :Running ... {}
 :Using ..... {}

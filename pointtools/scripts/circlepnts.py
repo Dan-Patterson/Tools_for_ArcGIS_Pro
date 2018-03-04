@@ -12,10 +12,10 @@
 import sys
 import numpy as np
 import arcpy
+from arraytools import tweet
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.3f}'.format}
-
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.3f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2,
                     suppress=True, threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -35,8 +35,9 @@ def _circle(radius=10, theta=22.5, xc=0.0, yc=0.0):
     pnts = np.c_[x_s, y_s]
     return pnts
 
+
 # --------------------------------------------------------------------------
-inFC = sys.argv[1]  # r"C:\Data\points\points.gdb\fishnet_label"
+inFC = sys.argv[1]   # r"C:\Data\points\points.gdb\fishnet_label"
 outFC = sys.argv[2]  # r"C:\Data\points\pnts2.shp"
 radius = float(sys.argv[3])  # radius = 2
 theta = float(sys.argv[4])
@@ -52,7 +53,7 @@ frmt = """... {} ...
 """
 args = [script, inFC, outFC, radius, theta, a]
 msg = frmt.format(*args)
-arcpy.AddMessage(msg)
+tweet(msg)
 # ---- option (1) read X and Y separately, then reset the dtype names
 # ---- get the circle values, stack and set dtype
 # or a list like... theta = [0, 90, 180, 270]

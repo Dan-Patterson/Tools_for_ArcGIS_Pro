@@ -113,8 +113,8 @@ import arcpy
 from arcpytools import fc_info, tweet
 from textwrap import dedent
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.1f}'.format}
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.1f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=100, precision=2,
                     suppress=True, threshold=120,
                     formatter=ft)
@@ -207,12 +207,11 @@ def connect(a, dist_arr, edges):
     out['Dist'] = d
     return out
 
-# ---- main section ----
 
+# ---- main section ----
 in_fc = sys.argv[1]
 out_fc = sys.argv[2]
-
-shp_fld, oid_fld, SR = fc_info(in_fc)
+shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
 out_flds = [oid_fld, shp_fld]
 frmt = """\nScript.... {}\nUsing..... {}\nSR...{}\n"""
 args = [script, in_fc, SR.name]
@@ -240,7 +239,6 @@ arcpy.CopyFeatures_management(s, out_fc)
 
 
 # ---- demo section ----
-
 def _demo():
     """A sample run demonstrating the principles and workflow"""
     a = np.array([[0, 0], [0, 8], [10, 8], [10, 0], [3, 4], [7, 4]])
@@ -248,6 +246,8 @@ def _demo():
     pairs = mst(d)                  # the orig-dest pairs for the mst
     o_d = connect(a_srt, d, pairs)  # produce an o-d structured array
     return a, d, pairs, o_d
+
+
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
     """Main section...   """

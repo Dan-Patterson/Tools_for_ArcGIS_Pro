@@ -24,17 +24,10 @@
 import sys
 import numpy as np
 import arcpy
+from arcpytools import fc_info, tweet
 
 arcpy.env.overwriteOutput = True
 
-
-def fc_info(in_fc):
-    """basic feature class information"""
-    desc = arcpy.Describe(in_fc)
-    SR = desc.spatialReference
-    shp_field = desc.ShapeFieldName
-    OIDField = desc.OIDFieldName
-    return shp_field, OIDField, SR
 
 # ---- input parameters ----
 in_fc = sys.argv[1]
@@ -42,7 +35,7 @@ dx = float(sys.argv[2])
 dy = float(sys.argv[3])
 out_fc = sys.argv[4]
 xy_shift = np.array([dx, dy], dtype="<f8")
-shp_field, OIDField, SR = fc_info(in_fc)
+shp_field, OIDField, shp_type, SR = fc_info(in_fc)
 # ---- convert to array, shift and return ----
 # Apparently, there can be problems writing directly to a featureclass
 # so, write to in_memory changing the required field names, then copy out
@@ -53,5 +46,5 @@ arr.dtype.names = nms
 temp_out = "in_memory/temp2"
 arcpy.da.NumPyArrayToFeatureClass(arr, temp_out, ['XYs'])
 arcpy.CopyFeatures_management(temp_out, out_fc)
-
+del temp_out
 # ---- the end ----

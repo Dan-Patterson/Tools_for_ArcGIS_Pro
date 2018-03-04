@@ -15,9 +15,8 @@ from textwrap import dedent
 from arcpytools import array_fc, tweet
 
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.3f}'.format}
-
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.3f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -53,6 +52,7 @@ def mesh_xy(L=0, B=0, R=5, T=5, dx=1, dy=1, as_rec=True):
         p = list(zip(xs, ys, xs, ys))
         pnts = np.array(p)
     return pnts, mesh
+
 
 extent = sys.argv[1]
 if extent in ("MAXOF", "MINOF"):
