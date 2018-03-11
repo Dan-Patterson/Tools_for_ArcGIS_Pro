@@ -21,6 +21,10 @@ This folder is a collection of scripts which contain defs which can be used in o
 This folder contains a toolbox and associated script(s) for ArcGIS Pro to work with points.  Also found at
 http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 
+*General blog posts*
+https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-with-points
+
+
 (1)  Concave hull  https://community.esri.com/blogs/dan_patterson/2018/03/11/concave-hulls-the-elusive-container
 
 (2)  Convex hull
@@ -42,9 +46,6 @@ http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
-
-*General blog posts*
-https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-with-points
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
