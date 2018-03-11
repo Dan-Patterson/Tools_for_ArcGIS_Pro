@@ -27,6 +27,9 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 script = sys.argv[0]  # print this should you need to locate the script
 
 
+__all__ = ['_xyID']
+
+
 def tweet(msg):
     """Produce a message for both arcpy and python
     : msg - a text message
@@ -71,6 +74,20 @@ def fc_info(in_fc, prn=False):
         tweet(frmt)
     else:
         return shp_fld, oid_fld, shp_type, SR
+
+
+def _xyID(in_fc, to_pnts=True):
+    """Convert featureclass geometry (in_fc) to a simple 2D structured array
+    :  with ID, X, Y values. Optionally convert to points, otherwise centroid.
+    """
+    flds = ['OID@', 'SHAPE@X', 'SHAPE@Y']
+    args = [in_fc, flds, None, None, to_pnts, (None, None)]
+    cur = arcpy.da.SearchCursor(*args)
+    a = cur._as_narray()
+    a.dtype = [('IDs', '<i4'), ('Xs', '<f8'), ('Ys', '<f8')]
+    del cur
+    return a
+
 
 
 def array_struct(a, fld_names=['X', 'Y'], dt=['<f8', '<f8']):
@@ -194,6 +211,48 @@ def arr2polys(a, out_fc, oid_fld, SR):
     return s
 
 
+def output_polylines(out_fc, SR, pnt_groups):
+    """Produce the output polygon featureclass.
+    :Requires:
+    :--------
+    : - A list of lists of points
+    :   aline = [[[0, 0], [1, 1]]]  # a list of points
+    :   aPolyline = [[aline]]       # a list of lists of points
+    """
+    msg = '\nRead the script header... A projected coordinate system required'
+    assert (SR is not None), msg
+    polylines = []
+    for pnts in pnt_groups:
+        for pair in pnts:
+            arr = arcpy.Array([arcpy.Point(*xy) for xy in pair])
+            pl = arcpy.Polyline(arr, SR)
+            polylines.append(pl)
+    if arcpy.Exists(out_fc):     # overwrite any existing versions
+        arcpy.Delete_management(out_fc)
+    arcpy.CopyFeatures_management(polylines, out_fc)
+    return
+
+
+def output_polygons(out_fc, SR, pnt_groups):
+    """Produce the output polygon featureclass.
+    :Requires:
+    :--------
+    : - A list of lists of points
+    :   aline = [[0, 0], [1, 1]]  # a list of points
+    :   aPolygon = [aline]       # a list of lists of points
+    """
+    msg = '\nRead the script header... A projected coordinate system required'
+    assert (SR is not None), msg
+    polygons = []
+    for pnts in pnt_groups:
+        for pair in pnts:
+            arr = arcpy.Array([arcpy.Point(*xy) for xy in pair])
+            pl = arcpy.Polygon(arr, SR)
+            polygons.append(pl)
+    if arcpy.Exists(out_fc):     # overwrite any existing versions
+        arcpy.Delete_management(out_fc)
+    arcpy.CopyFeatures_management(polygons, out_fc)
+    return
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":
