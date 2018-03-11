@@ -1,3 +1,4 @@
+
 ## __***Tools for ArcGIS Pro***__
 
 
@@ -20,23 +21,30 @@ This folder is a collection of scripts which contain defs which can be used in o
 This folder contains a toolbox and associated script(s) for ArcGIS Pro to work with points.  Also found at
 http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 
-(1)  Near as table equivalent
+(1)  Concave hull  https://community.esri.com/blogs/dan_patterson/2018/03/11/concave-hulls-the-elusive-container
 
-(2)  Modify points ... move ... sort
+(2)  Convex hull
 
-(3)  Create points
+(3)  Near as table equivalent
 
-(4)  Space points.
+(4)  Modify points ... move ... sort
+
+(5)  Create points
+
+(6)  Space points.
       Produce point patterns ensuring a certain minimum spacing between them.
 
-(5)  Minimum Spanning Trees of point sets
+(7)  Minimum Spanning Trees of point sets
 
-(6)  Whatever else I forgot to mention.
+(8)  Whatever else I forgot to mention.
 
 ### **table_tools**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
+
+*General blog posts*
+https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-with-points
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
