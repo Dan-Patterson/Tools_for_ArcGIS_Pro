@@ -55,7 +55,7 @@ def tweet(msg):
 
 def fc_info(in_fc):
     """basic feature class information"""
-    desc = arcpy.Describe(in_fc)
+    desc = arcpy.Describe(in_fc)    # fix to use da.Describe
     SR = desc.spatialReference      # spatial reference object
     shp_fld = desc.shapeFieldName   # FID or OIDName, normally
     oid_fld = desc.OIDFieldName     # Shapefield ...
@@ -76,23 +76,27 @@ def rankmin(x):
     csum[1:] = counts[:-1].cumsum()
     return csum[inv]
 
+
 # ------------------------------------------------------------------------
 # ---- Checks to see if running in test mode or from a tool
 if len(sys.argv) == 1:
-    in_fc = r'C:\GIS\Tools_scripts\Statistics\Stats_demo_01.gdb\pnts_2K_normal'
-    shp_fld, oid_fld, SR = fc_info(in_fc)
-    flds = arcpy.ListFields(in_fc)
-    #fld_names = [fld.name for fld in flds]
+    in_tbl = r'C:\GIS\Tools_scripts\Statistics\Stats_demo_01.gdb\pnts_2K_normal'
+    desc = arcpy.da.Describe(in_tbl)
+    oid_fld = desc['OIDFieldName']
+    flds = arcpy.ListFields(in_tbl)
+    # fld_names = [fld.name for fld in flds]
     fld_names = ['Rand_1_100', oid_fld]
     testing = True
     rank_fld = 'Rand_1_100'
     rank_min = True
 else:
-    in_fc = sys.argv[1]
+    in_tbl = sys.argv[1]
     fld_names = sys.argv[2]
     rank_fld = sys.argv[3]
     rank_min = sys.argv[4]
-    shp_fld, oid_fld, SR = fc_info(in_fc)
+    #
+    desc = arcpy.da.Describe(in_tbl)
+    oid_fld = desc['OIDFieldName']
     testing = False
 
 # ------------------------------------------------------------------------
@@ -111,7 +115,7 @@ elif isinstance(fld_names, (str)):
     else:
         order_by = fld_names.split(";") + [oid_fld]
 
-a = arcpy.da.TableToNumPyArray(in_fc, field_names=order_by)
+a = arcpy.da.TableToNumPyArray(in_tbl, field_names=order_by)
 
 a_s = a[order_by]
 srted = np.argsort(a_s, order=order_by)
@@ -128,7 +132,7 @@ else:
     j_a[rank_fld] = np.arange(1, a.shape[0]+1)
 #
 if not testing:
-    arcpy.da.ExtendTable(in_table=in_fc,
+    arcpy.da.ExtendTable(in_table=in_tbl,
                          table_match_field=oid_fld,
                          in_array=j_a,
                          array_match_field=oid_fld)
@@ -141,7 +145,7 @@ frmt = """
 :   {}
 {}
 """
-args = ["-"*70, script, in_fc, order_by, "-"*70]
+args = ["-"*70, script, in_tbl, order_by, "-"*70]
 msg = frmt.format(*args)
 tweet(msg)
 

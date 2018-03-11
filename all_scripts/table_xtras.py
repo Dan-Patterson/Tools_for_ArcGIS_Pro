@@ -110,6 +110,7 @@ b = np.array([a[i] for i in nms if a[i].dtype.kind == 'i'])  # int fields
 #f = 'C:/GIS/Tools_scripts/Data/sample_20.npy'
 #f = 'C:/GIS/Tools_scripts/Data/sample_1000.npy'
 #f = 'C:/GIS/Tools_scripts/Data/sample_10K.npy'
+#f =  'C:/GIS/Tools_scripts/Data/array_100K.npy'
 f = 'C:/GIS/Tools_scripts/Data/sample_100K.npy'
 
 a = np.load(f)
@@ -117,6 +118,9 @@ nms = a.dtype.names
 sze = [i[1] for i in a.dtype.descr]
 uni = np.unique(a[['Town', 'County']], return_counts=True)
 final = rfn.append_fields(uni[0], names='Count', data=uni[1], usemask=False)
+#n_0 = [(nm, a[nm]) for nm in nms if a[nm].dtype.kind == 'i']  # int fields
+sums = [(nm, a[nm].sum()) for nm in nms if a[nm].dtype.kind == 'i']  # sums
+
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":

@@ -2,7 +2,7 @@
 """
 :Script:   mesh_pnts.py
 :Author:   Dan_Patterson@carleton.ca
-:Modified: 2017-03-11
+:Modified: 2017-04-11
 :Purpose:  Just makes points on a grid as well as the meshgrid
 :
 :---------------------------------------------------------------------:
@@ -15,9 +15,8 @@ from textwrap import dedent
 from arcpytools import array_fc, tweet
 
 
-ft = {'bool': lambda x: repr(x.astype('int32')),
-      'float': '{: 0.3f}'.format}
-
+ft = {'bool': lambda x: repr(x.astype(np.int32)),
+      'float_kind': '{: 0.3f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -54,7 +53,10 @@ def mesh_xy(L=0, B=0, R=5, T=5, dx=1, dy=1, as_rec=True):
         pnts = np.array(p)
     return pnts, mesh
 
+
 extent = sys.argv[1]
+if extent in ("MAXOF", "MINOF"):
+    extent = "-180 -90 180 90"
 L, B, R, T = [float(i) for i in extent.split(" ")]
 dx = abs(float(sys.argv[2]))
 dy = abs(float(sys.argv[3]))
