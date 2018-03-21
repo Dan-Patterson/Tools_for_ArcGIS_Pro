@@ -2,7 +2,7 @@
 """
 :Script:   closetbl.py
 :Author:   Dan_Patterson@carleton.ca
-:Modified: 2017-04-11
+:Modified: 2018-03-20
 :
 :Purpose:  Determine the nearest points based on euclidean distance within
 :  a point file.  Emulates Generate Near Table in ArcMap
@@ -18,6 +18,7 @@
 
 import sys
 import numpy as np
+import warnings
 import arcpy
 from arcpytools import fc_info, tweet
 
@@ -26,6 +27,8 @@ ft = {'bool': lambda x: repr(x.astype(np.int32)),
 np.set_printoptions(edgeitems=10, linewidth=120, precision=2,
                     suppress=True, threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')
+
+warnings.simplefilter('ignore', FutureWarning)
 
 script = sys.argv[0]
 
@@ -59,9 +62,10 @@ def to_array(in_fc):
     """Extract the shapes and produce a coordinate array.
     """
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
-    in_flds = [oid_fld, shp_fld]
+    in_flds = [oid_fld] + ['SHAPE@X', 'SHAPE@Y']
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, in_flds)
-    a = a[shp_fld]
+    a = a[['SHAPE@X', 'SHAPE@Y']]
+    a = a.view(np.float64).reshape(a.shape[0], 2)
     return a
 
 
@@ -101,7 +105,7 @@ def near_tbl(a, b=None, N=1):
     if b is None:
         b = np.copy(a)
         offset = True
-    dist = e_dist(a, b, metric='euclidean')
+    dist = e_dist(a, b, metric='sqeuclidean')  # use sqeuclidean for now
     if dist.ndim == 1:
         print("do stuff")
         return dist
@@ -111,7 +115,7 @@ def near_tbl(a, b=None, N=1):
     rows, cols = np.triu_indices(n, offset, m)  # shape and diag. offset
     idx = dist[rows, cols].argsort()   # slicing with [:2] gives overall 2
     r, c = rows[idx], cols[idx]
-    d = dist[r, c]
+    d = np.sqrt(dist[r, c])  # now take the sqrt to get the actual distance
     az0 = line_dir(a[r], b[c], fromNorth=True)
     az1 = line_dir(b[c], a[r], fromNorth=True)
     z0 = list(zip(r, c, a[r, 0], a[r, 1], b[c, 0], b[c, 1], d, az0))
@@ -130,8 +134,6 @@ def near_tbl(a, b=None, N=1):
     return nt
 
 
-# ---- Run the analysis ----
-
 frmt = """\n
 :Running ... {}
 :Using ..... {}
@@ -139,16 +141,29 @@ frmt = """\n
 :Producing.. {}\n
 """
 
-in_fc = sys.argv[1]
-N = int(sys.argv[2])
-out_tbl = sys.argv[3]
-args = [script, in_fc, N, out_tbl]
-tweet(frmt.format(*args))           # call tweet
-a = to_array(in_fc)                 # call to_array
-nt = near_tbl(a, b=None, N=N)       # call near_tbl
-tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
-arcpy.da.NumPyArrayToTable(nt, out_tbl)
 
+# ---- Run the analysis ----
+def _tool():
+    """Run the analysis from the tool
+    """
+    in_fc = sys.argv[1]
+    N = int(sys.argv[2])
+    out_tbl = sys.argv[3]
+    args = [script, in_fc, N, out_tbl]
+    tweet(frmt.format(*args))           # call tweet
+    a = to_array(in_fc)                 # call to_array
+    nt = near_tbl(a, b=None, N=N)       # call near_tbl
+    tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
+    arcpy.da.NumPyArrayToTable(nt, out_tbl)
+
+
+if len(sys.argv) == 1:
+    in_fc = r'C:\GIS\A_Tools_scripts\Numpy_arc\Numpy_arc.gdb\a_10k_pnts'
+    a = arcpy.da.FeatureClassToNumPyArray(in_fc,
+                                          ['OID@', 'SHAPE@X', 'SHAPE@Y'])
+    a = to_array(in_fc)
+else:
+    _tool()
 
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
