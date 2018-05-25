@@ -1,13 +1,14 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   .py
+:Script:   array2raster.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-xx-xx
+:Modified: 2018-02-12
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
 :References:
-:
+:  http://pro.arcgis.com/en/pro-app/arcpy/functions/
+:       numpyarraytoraster-function.htm
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
@@ -32,7 +33,6 @@ def tweet(msg):
     m = "\n{}\n".format(msg)
     arcpy.AddMessage(m)
     print(m)
-    print(arcpy.GetMessages())
 
 
 def your_func_here():
@@ -54,37 +54,52 @@ def _tool():
     """run when script is from a tool
     """
     in_tbl = sys.argv[1]
-    in_flds = sys.argv[2]
-    out_fld = sys.argv[3]
+    in_fld = sys.argv[2]
+    out_fld = sys.argv[3]  # output field name
 
-    if ';' in in_flds:
-        in_flds = in_flds.split(';')
-    else:
-        in_flds = [in_flds]
-
+    # ---- main tool section
     desc = arcpy.da.Describe(in_tbl)
     tbl_path = desc['path']
     fnames = [i.name for i in arcpy.ListFields(in_tbl)]
     if out_fld in fnames:
         out_fld += 'dup'
     out_fld = arcpy.ValidateFieldName(out_fld, tbl_path)
-    args = [in_tbl, in_flds, out_fld, tbl_path]
+    args = [in_tbl, in_fld, out_fld, tbl_path]
     msg = "in_tbl {}\nin_fld {}\nout_fld  {}\ntbl_path  {}".format(*args)
     tweet(msg)
+    #
+    # ---- call section for processing function
+    #
     oid = 'OBJECTID'
-    vals = [oid] + in_flds
-    arr = arcpy.da.TableToNumPyArray(in_tbl, vals)
+    vals = [oid] + in_fld
+    in_arr = arcpy.da.TableToNumPyArray(in_tbl, vals)
     tweet("{!r:}".format(arr))
+    #
+    a0 = in_arr[in_fld]
+    # do stuff here
+    sze = a0.dtype.str
+    # ---- reassemble the table for extending
+    dt = [('IDs', '<i8'), (out_fld, sze)]
+    out_array = np.copy(in_arr.shape[0])
+    out_array[out_fld] = a0  # result goes here
+    out_array.dtype = dt
+    arcpy.da.ExtendTable(in_tbl, 'OBJECTID', out_array, 'IDs')
+
+# ----------------------------------------------------------------------
+# .... final code section producing the featureclass and extendtable
+if len(sys.argv) == 1:
+    testing = True
+    a = _demo()
+    frmt = "Result...\n{}"
+    print(frmt.format(a))
+else:
+    testing = False
+    _tool()
+#
+if not testing:
+    print('Concatenation done...')
 
 
-arcpy.da.ExtendTable(in_tbl, 'OBJECTID', out_array, 'OBJECTID')
-
-
-def _demo():
-    """
-    : -
-    """
-    pass
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":
@@ -93,5 +108,4 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
-    _demo()
-
+    a = _demo()

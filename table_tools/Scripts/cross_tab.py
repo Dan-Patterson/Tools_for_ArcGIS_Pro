@@ -2,7 +2,7 @@
 """
 :Script:   cross_tab.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-09-23
+:Modified: 2018-03-19
 :Purpose:  Crosstabulate data
 :Notes:
 :
@@ -44,7 +44,7 @@ def tweet(msg):
 def _prn(r, c, a):
     """fancy print formatting.
     """
-    r_sze = max(max([len(i) for i in r]), 8)
+    r_sze = max(max([len(str(i)) for i in r]), 8)
     c_sze = [max(len(str(i)), 5) for i in c]
     f_0 = '{{!s:<{}}} '.format(r_sze)
     f_1 = ('{{!s:>{}}} '*len(c)).format(*c_sze)
@@ -181,6 +181,7 @@ else:
     in_tbl = sys.argv[1]
     row_fld = sys.argv[2]
     col_fld = sys.argv[3]
+    out_tbl = sys.argv[4]
     flds = [row_fld, col_fld]
     t = arcpy.da.TableToNumPyArray(in_table=in_tbl, field_names=flds,
                                    skip_nulls=False)  # , null_value=null_dict)
@@ -190,7 +191,8 @@ else:
     args = [in_tbl, row_fld, col_fld]
     msg = "\nTable {}\nrow field {}\ncol field {}".format(*args)
     tweet(msg)
-
+    if not (out_tbl in ['#', '', None]):
+        arcpy.da.NumPyArrayToTable(ctab, out_tbl)
 if __name__ == "__main__":
     """run crosstabulation with data"""
 #    ctab, a, result, r, c = _demo()
