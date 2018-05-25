@@ -147,12 +147,14 @@ def _tool():
     """Run the analysis from the tool
     """
     in_fc = sys.argv[1]
-    N = int(sys.argv[2])
-    out_tbl = sys.argv[3]
+    in_fc2 = sys.argv[2]
+    N = int(sys.argv[3])
+    out_tbl = sys.argv[4]
     args = [script, in_fc, N, out_tbl]
     tweet(frmt.format(*args))           # call tweet
     a = to_array(in_fc)                 # call to_array
-    nt = near_tbl(a, b=None, N=N)       # call near_tbl
+    b = to_array(in_fc2)
+    nt = near_tbl(a, b=b, N=N)       # call near_tbl
     tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
     arcpy.da.NumPyArrayToTable(nt, out_tbl)
 
@@ -162,6 +164,7 @@ if len(sys.argv) == 1:
     a = arcpy.da.FeatureClassToNumPyArray(in_fc,
                                           ['OID@', 'SHAPE@X', 'SHAPE@Y'])
     a = to_array(in_fc)
+    a = a[:10]
 else:
     _tool()
 

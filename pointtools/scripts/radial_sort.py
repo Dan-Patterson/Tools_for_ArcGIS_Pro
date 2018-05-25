@@ -191,12 +191,12 @@ def test_envs(in_fc, cent, out_fc0, out_fc1):
         return False, []
     #
     # (2) ---- check the output files
-    if out_fc0 != "#":
+    if out_fc0 not in (None, 'None', " ", "", "#"):
         is_good = check_files(out_fc0)
         if not is_good:
             tweet("\nWrong path or filename?....{}\n".format(out_fc0))
             return False, []
-    if out_fc1 != "#":
+    if out_fc1 not in (None, 'None', " ", "", "#"):
         is_good = check_files(out_fc1)
         if not is_good:
             tweet("\nWrong path or filename?....{}\n".format(out_fc1))
@@ -255,7 +255,7 @@ cleared, vals = results
 if not cleared:
     tweet(dedent(msg0).format(script))
 else:
-    print("\nPassed all checks-------------")
+    tweet("\nPassed all checks-------------\n")
     #
     # ---- Process section ------------------------------
     #
