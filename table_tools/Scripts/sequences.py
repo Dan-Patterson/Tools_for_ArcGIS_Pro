@@ -5,14 +5,15 @@ sequences
 
 Script:   sequential_funcs.py
 Author:   Dan.Patterson@carleton.ca
-Modified: 2018-05-19
+Modified: 2018-06-02
 Purpose :
     Calculating sequential patterns for fields in geodatabase tables
 Useage :
 
-:References:
-:  http://pro.arcgis.com/en/pro-app/arcpy/functions/
-:       numpyarraytoraster-function.htm
+References:
+-----------
+  http://pro.arcgis.com/en/pro-app/arcpy/functions/
+       numpyarraytoraster-function.htm
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
@@ -61,29 +62,30 @@ def sequences(data, stepsize=0):
 
     References:
     -----------
-    https://stackoverflow.com/questions/7352684/how-to-find-the-groups-of-
-    sequences-elements-from-an-array-in-numpy
+
+    `<https://stackoverflow.com/questions/7352684/how-to-find-the-groups-of-
+    sequences-elements-from-an-array-in-numpy>`_.
+
+    `<https://stackoverflow.com/questions/50551776/python-chunk-array-on-
+    condition#50551924>`_.
     """
     #
     a = np.array(data)
     a_dt = a.dtype.kind
     if a_dt in ('U', 'S'):
         seqs = np.split(a, np.where(a[1:] != a[:-1])[0] + 1)
-        dt = [('ID', '<i4'), ('Value', a.dtype.str), ('Count', '<i4'),
-              ('From_', '<i4'), ('To_', '<i4')]
     elif a_dt in ('i', 'f'):
         seqs = np.split(a, np.where(np.diff(a) != stepsize)[0] + 1)
-        dt = [('ID', '<i4'), ('Value', '<i4'), ('Count', '<i4'),
-              ('From_', '<i4'), ('To_', '<i4')]
     vals = [i[0] for i in seqs]
     cnts = [len(i) for i in seqs]
     seq_num = np.arange(len(cnts))
     too = np.cumsum(cnts)
     frum = np.zeros_like(too)
     frum[1:] = too[:-1]
+    dt = [('ID', '<i4'), ('Value', a.dtype.str), ('Count', '<i4'),
+          ('From_', '<i4'), ('To_', '<i4')]
     out = np.array(list(zip(seq_num, vals, cnts, frum, too)), dtype=dt)
     return out
-
 
 
 # ---- Run options: _demo or from _tool
@@ -98,7 +100,7 @@ def _demo():
     #
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
     #
-    in_fld = 'SequenceTxt'  #'Sequences2'
+    in_fld = 'SequenceTxt'  #'Sequences2'  # 'SequenceTxt'
     stepsize = 0
     in_flds = [oid_fld, in_fld]   # OBJECTID, plus another field
     a = arcpy.da.TableToNumPyArray(in_tbl, in_flds, skip_nulls=False,
@@ -157,7 +159,7 @@ NoData: -1
 tweet(msg.format(in_tbl, in_fld, stepsize, out_tbl))
 
 out = sequences(a, stepsize=0)
-if out_tbl not in ("", " ", None, 'None'):
+if out_tbl not in ("#", "", " ", None, 'None'):
     arcpy.da.NumPyArrayToTable(out, out_tbl)
 prn = frmt_rec(out[:50], 0, True, False)
 tweet(prn)

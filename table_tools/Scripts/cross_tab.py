@@ -1,14 +1,21 @@
  # -*- coding: UTF-8 -*-
 """
-:Script:   cross_tab.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-03-19
-:Purpose:  Crosstabulate data
-:Notes:
-:
-:References:
-: https://stackoverflow.com/questions/12983067/how-to-find-unique-vectors-of
-:         -a-2d-array-over-a-particular-axis-in-a-vectorized
+cross_tab
+=========
+
+Script :   cross_tab.py
+
+Author:   Dan_Patterson@carleton.ca
+
+Modified : 2018-05-26
+
+Purpose :  Crosstabulate data
+
+References :
+
+.. `<https://stackoverflow.com/questions/12983067/how-to-find-unique-vectors-of
+-a-2d-array-over-a-particular-axis-in-a-vectorized>`
+
 : https://stackoverflow.com/questions/16970982/find-unique-rows-in-numpy-array
 : http://stackoverflow.com/questions/38030054/
 :      create-adjacency-matrix-in-python-for-large-dataset
@@ -93,61 +100,51 @@ def crosstab(row, col, verbose=False):
     return ctab, a, result, r, c
 
 
+def tbl_2_np_array(in_tbl, flds, skip_nulls=False, null_value=None):
+    """Form the TableToNumPyArray to account for nulls for various dtypes
+
+    """
+    int_min = np.iinfo(np.int32).min
+    float_min = np.finfo(np.float64).min
+    str_val = "None"
+    nulls = {'Double':float_min, 'Integer':int_min, 'String':str_val}
+    #
+    fld_dict = {i.name: i.type for i in arcpy.ListFields(in_tbl)}
+    null_dict = {f:nulls[fld_dict[f]] for f in flds}
+    t = arcpy.da.TableToNumPyArray(in_table=in_tbl, field_names=flds,
+                                   skip_nulls=False,
+                                   null_value=null_dict)
+    return t
+
+
 def _demo():
-    """run a test using a file
+    """run a test using 2K of normally distributed points
     : TableToNumPyArray(in_table, field_names, {where_clause},
     :                   {skip_nulls}, {null_value})
     """
-    # using the UG1 and Employer_group that is not null in both cases
-    # 10,734 records
-    # f = r'C:\FPA_2\D_gdb_files\FPA_final_Sept_13.gdb\UG1_EmpGroup_notnull'
-    #f = r'C:\FPA_2\D_gdb_files\FPA_final_Sept_13.gdb\UG1_Title_notnull'
-    f = r'C:\FPA_2\D_gdb_files\FPA_final_Sept_13.gdb\grad_only_employer_group'
-    flds = [i.name for i in arcpy.ListFields(f)]
-    null_dict = {'OBJECTID': -9, 'Student_num': -9, 'Code': -9, 'Year_': -9}
-    t = arcpy.da.TableToNumPyArray(in_table=f, field_names=flds,
-                                   skip_nulls=False, null_value=null_dict)
-#    rows = t['UG1']  # for undergrad
-#    rows = t['Grad1']  # for grad
-#    cols = t['Sector']
-    rows =  t['Employer_Group']  # t['Title_Position']
-    cols = t['Grad1'] # t['UG1']
-#    f = r'C:\GIS\Tools_scripts\Statistics\Stats_demo_01.gdb\pnts_2K_normal'
-#    flds = [i.name for i in arcpy.ListFields(f)]
-#    t = arcpy.da.TableToNumPyArray(in_table=f, field_names=flds,
-#                                   skip_nulls=False)  # , null_value=null_dict)
-#    rows = t['Text01']
-#    cols = t['Text02']
+    # Load the table, with 2 fields, produce the table and the crosstabulation
+    f = "/".join(script.split("/")[:-2]) + '/Table_tools.gdb/pnts_2K_normal'
+    flds = ['Text01', 'Sequences2']
+    t = tbl_2_np_array(in_tbl=f, flds=flds)
+    #
+    rows = t[flds[0]]
+    cols = t[flds[1]]
     ctab, a, result, r, c = crosstab(rows, cols, verbose=True)
     return ctab, a, result, r, c
 
 
 def _demo2():
-    """run a test using 2K of normally distributed points
-    : Files
-
-    """
-    f = r'C:\GIS\Tools_scripts\Statistics\Stats_demo_01.gdb\pnts_2K_normal'
-    flds = [i.name for i in arcpy.ListFields(f)]
-    t = arcpy.da.TableToNumPyArray(in_table=f, field_names=flds,
-                                   skip_nulls=False)  # , null_value=null_dict)
-    rows = t['Text01']
-    cols = t['Text02']
-    ctab, a, result, r, c = crosstab(rows, cols, verbose=False)
-    return ctab, a, result, r, c
-
-
-def _demo3():
     """load a npy file
-    :  C:\GIS\Tools_scripts\Data\sample_20.npy
-    :  C:\GIS\Tools_scripts\Data\sample_1000.npy
-    :  C:\GIS\Tools_scripts\Data\sample_10K.npy
-    :  C:\GIS\Tools_scripts\Data\sample_100K.npy
-    :
-    :    dtype=[('OBJECTID', '<i4'), ('f0', '<i4'), ('County', '<U2'),
-    :           ('Town', '<U6'), ('Facility', '<U8'), ('Time', '<i4')])
+
+    - C:\GIS\Tools_scripts\Data\sample_20.npy
+    - C:\GIS\Tools_scripts\Data\sample_1000.npy
+    - C:\GIS\Tools_scripts\Data\sample_10K.npy
+    - C:\GIS\Tools_scripts\Data\sample_100K.npy
+
+    dtype=[('OBJECTID', '<i4'), ('f0', '<i4'), ('County', '<U2'),
+           ('Town', '<U6'), ('Facility', '<U8'), ('Time', '<i4')])
     """
-    f = r'C:\GIS\Tools_scripts\Data\sample_100K.npy'
+    f = r'C:\GIS\A_Tools_scripts\Data\sample_100K.npy'
     t = np.load(f)
     rows = t['County']  #t['Text01']
     cols = t['Town']
@@ -183,13 +180,18 @@ else:
     col_fld = sys.argv[3]
     out_tbl = sys.argv[4]
     flds = [row_fld, col_fld]
-    t = arcpy.da.TableToNumPyArray(in_table=in_tbl, field_names=flds,
-                                   skip_nulls=False)  # , null_value=null_dict)
+    #
+    t = tbl_2_np_array(in_tbl=in_tbl, flds=flds)
+    #
     rows = t[row_fld]
     cols = t[col_fld]
     ctab, a, result, r, c = crosstab(rows, cols, verbose=True)
     args = [in_tbl, row_fld, col_fld]
-    msg = "\nTable {}\nrow field {}\ncol field {}".format(*args)
+    pre = '    '
+    msg = frmt.format(indent(str(ctab), pre), indent(str(a), pre),
+                      indent(str(r), pre), indent(str(c), pre),
+                      indent(result, pre))
+    tweet("{}{}".format('---- cross_tab.py ', "-"*60))
     tweet(msg)
     if not (out_tbl in ['#', '', None]):
         arcpy.da.NumPyArrayToTable(ctab, out_tbl)

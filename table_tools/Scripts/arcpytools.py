@@ -2,7 +2,7 @@
 """
 :Script:   arcpytools.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-03-31
+:Modified: 2018-05-25
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -55,14 +55,24 @@ def _describe(in_fc=None):
 
 def fc_info(in_fc, prn=False):
     """Return basic featureclass information, including...
-    :
-    : shp_fld  - field name which contains the geometry object
-    : oid_fld  - the object index/id field name
-    : SR       - spatial reference object (use SR.name to get the name)
-    : shp_type - shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
-    : - others: 'areaFieldName', 'baseName', 'catalogPath','featureType',
-    :           'fields', 'hasOID', 'hasM', 'hasZ', 'path'
-    : - all_flds =[i.name for i in desc['fields']]
+
+    Parameters:
+    -----------
+    - shp_fld  :
+        field name which contains the geometry object
+    - oid_fld  :
+        the object index/id field name
+    - SR       :
+        spatial reference object (use SR.name to get the name)
+    - shp_type :
+        shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
+    - others   :
+        'areaFieldName', 'baseName', 'catalogPath','featureType','fields',
+        'hasOID', 'hasM', 'hasZ', 'path'
+
+
+     - all_flds :
+         [i.name for i in desc['fields']]
     """
     desc = _describe(in_fc)
     args = ['shapeFieldName', 'OIDFieldName', 'shapeType', 'spatialReference']
@@ -94,11 +104,12 @@ def _xyID(in_fc, to_pnts=True):
 
 def array_struct(a, fld_names=['X', 'Y'], dt=['<f8', '<f8']):
     """Convert an array to a structured array
-    :Requires:
-    :--------
-    :  a - an ndarray with shape at least (N, 2)
-    :  dt = dtype class
-    :  names - names for the fields
+
+    Parameters:
+    -----------
+    - a : an ndarray with shape at least (N, 2)
+    -  dt : dtype class
+    -  names : names for the fields
     """
     dts = [(fld_names[i], dt[i]) for i in range(len(fld_names))]
     z = np.zeros((a.shape[0],), dtype=dts)
@@ -109,11 +120,16 @@ def array_struct(a, fld_names=['X', 'Y'], dt=['<f8', '<f8']):
 
 
 def array_fc(a, out_fc, fld_names, SR):
-    """array to featureclass/shapefile...optionally including all fields
-    :  syntax: array_fc(a, out_fc, fld_names, SR)
-    :  see: NumpyArrayToFeatureClass, ListFields for information and options
-    :  out_fc:   featureclass/shapefile... complete path
-    :  fld_names:  is the Shapefield name ie ['Shape'] or ['X', 'Y's]
+    """Array to featureclass/shapefile...optionally including all fields
+
+    Parameters:
+    -----------
+    - out_fc :  featureclass/shapefile... complete path
+    - fld_names : the Shapefield name ie ['Shape'] or ['X', 'Y's]
+    - SR : spatial reference of the output
+
+    See also :
+        NumpyArrayToFeatureClass, ListFields for information and options
     """
     if arcpy.Exists(out_fc):
         arcpy.Delete_management(out_fc)
@@ -122,12 +138,31 @@ def array_fc(a, out_fc, fld_names, SR):
 
 
 def fc_array(in_fc, flds, allpnts):
-    """Convert featureclass to an ndarray...with optional fields besides the
-    :  FID/OIDName and Shape fields.
-    :Syntax: read_shp(input_FC,other_flds, explode_to_points)
-    :   input_FC    shapefile
-    :   other_flds   "*", or specific fields ['FID','Shape','SomeClass', etc]
-    :   see:  FeatureClassToNumPyArray, ListFields for more information
+    """Convert a featureclass to an ndarray...with optional fields besides the
+    FID/OIDName and Shape fields.
+
+    Parameters:
+    -----------
+    in_fc : text
+        Full path to the geodatabase and the featureclass name
+
+    flds : text or list
+        - ``''   : just an object id and shape field``
+        - ``'*'  : all fields in the featureclass or``
+        - ``list : specific fields ['OBJECTID','Shape','SomeClass', etc]``
+
+    allpnts : boolean
+        - True `explodes` geometry to individual points.
+        - False returns the centroid
+
+    Requires:
+    ---------
+        fc_info(in_fc) function
+
+    See also:
+    ---------
+        FeatureClassToNumPyArray, ListFields for more information in current
+        arcpy documentation
     """
     out_flds = []
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)  # get the base information
@@ -141,9 +176,8 @@ def fc_array(in_fc, flds, allpnts):
         for f in fields:
             if f.name in flds:
                 out_flds.append(f.name)
-    frmt = """
-    Inside....
-    Running 'fc_array' with...\n{}\nFields...{}\nAll pnts...{}\nSR...{}
+    frmt = """\nRunning 'fc_array' with ....
+    \nfeatureclass... {}\nFields... {}\nAll pnts... {}\nSR... {}
     """
     args = [in_fc, out_flds, allpnts, SR.name]
     msg = dedent(frmt).format(*args)
@@ -237,11 +271,21 @@ def output_polylines(out_fc, SR, pnt_groups):
 
 def output_polygons(out_fc, SR, pnt_groups):
     """Produce the output polygon featureclass.
-    :Requires:
-    :--------
-    : - A list of lists of points
-    :   aline = [[0, 0], [1, 1]]  # a list of points
-    :   aPolygon = [aline]       # a list of lists of points
+
+    Parameters:
+    -----------
+    out_fc : string
+        The path and name of the featureclass to be created.
+    SR : spatial reference of the output featureclass
+    pnts_groups :
+        The point groups, list of lists of points, to include parts rings.
+
+    Requires:
+    --------
+
+    - A list of lists of points.  Four points form a triangle is the minimum
+    -  aline = [[0, 0], [1, 1]]  # a list of points
+    -  aPolygon = [aline]        # a list of lists of points
     """
     msg = '\nRead the script header... A projected coordinate system required'
     assert (SR is not None), msg

@@ -1,24 +1,33 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   array2raster.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-02-12
-:Purpose:  tools for working with numpy arrays
-:Useage:
-:
-:References:
-:  http://pro.arcgis.com/en/pro-app/arcpy/functions/
-:       numpyarraytoraster-function.htm
-:---------------------------------------------------------------------:
+script name
+===========
+
+Script :   array2raster.py
+
+Author :   Dan_Patterson@carleton.ca
+
+Modified : 2018-02-12
+
+Purpose:  tools for working with numpy arrays
+
+Useage :
+
+References
+----------
+`<http://pro.arcgis.com/en/pro-app/arcpy/functions/
+numpyarraytoraster-function.htm>`_.
+
+---------------------------------------------------------------------
 """
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
+from arcpytools import fc_info, tweet  #, frmt_rec, _col_format
 import arcpy
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
-
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -26,13 +35,37 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 script = sys.argv[0]  # print this should you need to locate the script
 
 
-def tweet(msg):
-    """Print a message for both arcpy and python.
-    : msg - a text message
+def tbl_2_np_array(in_tbl, flds):
+    """Form the TableToNumPyArray to account for nulls for various dtypes.
+    This is essentially a shortcut to `arcpy.da.TableToNumPyArray`
+
+    Requires
+    --------
+    `in_tbl` :
+        table, or featureclass table name
+    `flds` :
+        list of field names
+    `skip_nulls` = False :
+        set within function
+    `null_value` :
+        determined from the dtype of the array...
+        otherwise you may as well do it manually
+
+    Source
+    ------
+    arraytools, apt.py module
     """
-    m = "\n{}\n".format(msg)
-    arcpy.AddMessage(m)
-    print(m)
+    int_min = np.iinfo(np.int32).min
+    float_min = np.finfo(np.float64).min
+    str_val = "None"
+    nulls = {'Double':float_min, 'Integer':int_min, 'String':str_val}
+    #
+    fld_dict = {i.name: i.type for i in arcpy.ListFields(in_tbl)}
+    null_dict = {f:nulls[fld_dict[f]] for f in flds}
+    t = arcpy.da.TableToNumPyArray(in_table=in_tbl, field_names=flds,
+                                   skip_nulls=False,
+                                   null_value=null_dict)
+    return t
 
 
 def your_func_here():
@@ -59,6 +92,10 @@ def _tool():
 
     # ---- main tool section
     desc = arcpy.da.Describe(in_tbl)
+    # ---- main tool section
+    _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
+    #
+    flds = [oid_fld, in_fld]
     tbl_path = desc['path']
     fnames = [i.name for i in arcpy.ListFields(in_tbl)]
     if out_fld in fnames:
@@ -70,13 +107,15 @@ def _tool():
     #
     # ---- call section for processing function
     #
-    oid = 'OBJECTID'
-    vals = [oid] + in_fld
-    in_arr = arcpy.da.TableToNumPyArray(in_tbl, vals)
-    tweet("{!r:}".format(arr))
+    #in_arr = arcpy.da.TableToNumPyArray(in_tbl, vals)  # old
+    in_arr = tbl_2_np_array(in_tbl, flds)  # produce the table
+    #
+    tweet("{!r:}".format(in_arr))
     #
     a0 = in_arr[in_fld]
-    # do stuff here
+    #
+    # do stuff here ********************************
+    #
     sze = a0.dtype.str
     # ---- reassemble the table for extending
     dt = [('IDs', '<i8'), (out_fld, sze)]
@@ -90,14 +129,14 @@ def _tool():
 if len(sys.argv) == 1:
     testing = True
     a = _demo()
-    frmt = "Result...\n{}"
+    frmt = "Testing...\n{}"
     print(frmt.format(a))
 else:
     testing = False
     _tool()
 #
 if not testing:
-    print('Concatenation done...')
+    tweet('Some message here...')
 
 
 # ----------------------------------------------------------------------
@@ -108,4 +147,4 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
-    a = _demo()
+#    a = _demo()

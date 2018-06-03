@@ -1,14 +1,19 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   concatenate_flds.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-01-30
-:Purpose:  tools for working with numpy arrays
-:  Concatenate fields from fields in a geodatabase table.
-:
-:References:
-:
-:---------------------------------------------------------------------:
+concatenate_flds
+================
+
+Script :   concatenate_flds.py
+
+Author :   Dan_Patterson@carleton.ca
+
+Modified : 2018-05-26
+
+Purpose :  Concatenate fields from fields in a geodatabase table.
+
+References:
+
+---------------------------------------------------------------------
 """
 # ---- imports, formats, constants ----
 import sys
@@ -51,10 +56,11 @@ def _cleanup(arrs, strip_list):
 
 def concat_flds(arrs, sep='space', name=None, strip_list=None, with_ids=True):
     """Concatenate a sequence of arrays to string format and return a
-    :  structured array or ndarray
-    :  arrs - a list of single arrays of the same length
-    :  sep - the separator to separate the arrays
-    :  name - used for structured array
+    structured array or ndarray
+
+    - arrs : a list of single arrays of the same length
+    - sep  : the separator to separate the arrays
+    - name : used for structured array
     """
     def cleanup(arrs, strip_list):
         """clean the arrays if needed"""

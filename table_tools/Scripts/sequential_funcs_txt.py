@@ -80,68 +80,21 @@ def tbl_2_np_array(in_tbl, flds):
     return a
 
 
-def cum_sum(a):
-    """Cumulative sum"""
-    return np.nancumsum(a)
-
-def max_diff(a):
-    """diff from max"""
-    return a - np.nanmax(a)
-
-
-def mean_diff(a):
-    """diff from mean"""
-    return a - np.nanmean(a)
-
-
-def median_diff(a):
-    """diff from median"""
-    return a - np.nanmedian(a)
-
-
-def min_diff(a):
-    """diff from min"""
-    return a - np.nanmin(a)
-
-
-def percent(a):
-    """value percentage"""
-    m = has_nulls(a)
-    if not np.alltrue(m):
-        a = np.ma.MaskedArray(a, mask=m)
-        return (a/(np.ma.sum(a) * 1.0)) * 100.
-    else:
-        return (a/(np.sum(a) * 1.)) * 100.
-
-
-def seq_diff(a):
-    """Sequential diffs"""
-    return a[1:] - a[:-1]
-
-
 def seq_number(a):
     """Sequentially number the class values in a field
     """
-    uni = np.unique(a)
-    max_sze = [len(i) for i in uni]
+    uni, counts = np.unique(a, False, False, True)
+    max_sze = max([len(i) for i in uni])
+    max_cnts = max([len(str(i)) for i in counts])
+    frmt = "{}_{:0{}.0f}"
     out = np.chararray(len(a), max_sze + 5, True)
     for u in uni:
         idx = np.where(a == u)[0]
         cnt = 0
         for i in idx:
-            out[i] = "{}{:02.0f}".format(u, cnt)
+            out[i] = frmt.format(u, cnt, max_cnts)
             cnt += 1
     return out
-
-
-def val_diff(a, val):
-    """diff from a value"""
-    return a - val
-
-
-def z_score(a):
-    """Z-scores"""
-    return mean_diff(a)/np.nanstd(a)
 
 
 def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
@@ -202,21 +155,15 @@ def _demo():
     #
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
     #
-    in_fld = 'Unif'  # 'Sequences2'  #'Ys'
+    in_fld = 'Text01'  # 'Sequences2'  #'Ys'
     del_fld = True
     out_fld = 'Result_fld'
     in_flds = [oid_fld, in_fld]   # OBJECTID, plus another field
     in_arr = tbl_2_np_array(in_tbl, in_flds)
-    c = np.array(['cumulative sum', 'diff from max',
-                  'diff from mean', 'diff from median',
-                  'diff from min', 'diff from value',
-                  'percent', 'sequential diff',
-                  'sequential number',
-                  'z_score'])
-    func = 'percent'  #np.random.choice(c)
+    # c = np.array(['sequential number'])
+    func = 'sequential number'
     xtend = False
-    val = None
-    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val
+    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend
 
 def _tool():
     """run when script is from a tool
@@ -226,7 +173,6 @@ def _tool():
     func = sys.argv[3]
     out_fld = sys.argv[4]  # output field name
     del_fld = sys.argv[5]
-    val = sys.argv[6]
     #
     # ---- main tool section
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
@@ -235,7 +181,7 @@ def _tool():
     in_arr = tbl_2_np_array(in_tbl, flds)
     tweet("{!r:}".format(in_arr))
     xtend = True
-    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val
+    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend
 
 
 # ----------------------------------------------------------------------
@@ -243,54 +189,18 @@ def _tool():
 #
 if len(sys.argv) == 1:
     testing = True
-    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val = _demo()
+    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend = _demo()
 else:
     testing = False
-    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val = _tool()
+    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend = _tool()
 
 a = in_arr[in_fld]  # do stuff with array
 
-if func == 'cumulative sum':
-    result = cum_sum(a)  # sequential diff call
-    idx = 0
-elif func == 'diff from max':
-    result = max_diff(a)
-    idx = 0
-elif func == 'diff from mean':
-    result = mean_diff(a)
-    idx = 0
-elif func == 'diff from median':
-    result = median_diff(a)
-    idx = 0
-elif func == 'diff from min':
-    result = min_diff(a)
-    idx = 0
-elif func == 'diff from value':
-    idx = 0
-    val_orig = val
-    try:    val = int(val)
-    except:    val = 0
-    try:    val = float(val)
-    except:    val = 0
-    finally:
-        frmt = "Difference value entered... {!r:}... Value used... {!r:}"
-        tweet(frmt.format(val_orig, val))
-        pass
-    result = val_diff(a, val)
-elif func == 'percent':
-    result = percent(a)
-    idx = 0
-elif func == 'sequential diff':
-    result = seq_diff(a)  # sequential diff call
-    idx = 1
-elif func == 'sequential number':
-    result = 'seq_number'
-    idx = 0
-elif func == 'z_score':
-    result = z_score(a)
+if func == 'sequential number':
+    result = seq_number(a)
     idx = 0
 else:
-    result = seq_diff(a)
+    result = seq_number(a)
     idx = 1
 #
 # ---- reassemble the table for extending ----
