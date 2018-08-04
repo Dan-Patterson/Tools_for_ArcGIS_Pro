@@ -2,7 +2,7 @@
 """
 :Script:   arcpytools.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-05-25
+:Modified: 2018-06-21
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -27,7 +27,12 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 script = sys.argv[0]  # print this should you need to locate the script
 
 
-__all__ = ['_xyID']
+__all__ = ['_col_format', '_describe', '_xyID',
+           'arr2line', 'arr2pnts', 'arr2polys',
+           'array_fc', 'array_struct', 'fc_array',
+           'fc_info', 'frmt_rec',
+           'output_polygons', 'output_polylines',
+           'pd_', 'shapes2fc', 'tweet']
 
 
 def tweet(msg):

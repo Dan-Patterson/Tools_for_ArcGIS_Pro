@@ -48,7 +48,7 @@ def _tool():
     """
     in_tbl = sys.argv[1]
     in_flds = sys.argv[2]
-    out_folder = sys.argv[3]  # output field name
+    out_folder = sys.argv[3]  # output folder name
     out_filename = sys.argv[4]
     out_name = "\\".join([out_folder, out_filename])
     # ---- main tool section
@@ -99,7 +99,7 @@ else:
     _tool()
 #
 if not testing:
-    print('Concatenation done...')
+    print('Demo done...')
 
 
 # ----------------------------------------------------------------------

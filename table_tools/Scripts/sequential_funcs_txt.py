@@ -1,19 +1,25 @@
 # -*- coding: UTF-8 -*-
 """
-sequential_funcs
-================
+sequential_funcs_txt
+====================
 
-Script:   sequential_funcs.py
+Script:   sequential_funcs_txt.py
+
 Author:   Dan.Patterson@carleton.ca
-Modified: 2018-05-19
+
+Modified: 2018-06-04
+
 Purpose :
     Calculating sequential values for fields in geodatabase tables
+
 Useage :
 
-:References:
-:  http://pro.arcgis.com/en/pro-app/arcpy/functions/
-:       numpyarraytoraster-function.htm
-:---------------------------------------------------------------------:
+References
+----------
+`<http://pro.arcgis.com/en/pro-app/arcpy/data-access/numpyarraytotable.htm>`_.
+`<http://pro.arcgis.com/en/pro-app/arcpy/data-access/tabletonumpyarray.htm>`_.
+---------------------------------------------------------------------
+
 """
 # ---- imports, formats, constants ----
 import sys
@@ -44,7 +50,7 @@ def has_nulls(a):
     return m
 
 
-def tbl_2_np_array(in_tbl, flds):
+def tbl_2_nparray(in_tbl, flds):
     """Form the TableToNumPyArray to account for nulls for various dtypes.
     This is essentially a shortcut to `arcpy.da.TableToNumPyArray`
 
@@ -54,8 +60,6 @@ def tbl_2_np_array(in_tbl, flds):
         table, or featureclass table name
     `flds` :
         list of field names
-    `as_masked :
-        return a masked array if nodata found
     `skip_nulls` = False :
         set within function
     `null_value` :
@@ -80,8 +84,8 @@ def tbl_2_np_array(in_tbl, flds):
     return a
 
 
-def seq_number(a):
-    """Sequentially number the class values in a field
+def seq_text(a):
+    """Sequentially number the text class values in a field
     """
     uni, counts = np.unique(a, False, False, True)
     max_sze = max([len(i) for i in uni])
@@ -159,9 +163,9 @@ def _demo():
     del_fld = True
     out_fld = 'Result_fld'
     in_flds = [oid_fld, in_fld]   # OBJECTID, plus another field
-    in_arr = tbl_2_np_array(in_tbl, in_flds)
-    # c = np.array(['sequential number'])
-    func = 'sequential number'
+    in_arr = tbl_2_nparray(in_tbl, in_flds)
+    # c = np.array(['sequential text'])
+    func = 'sequential text'
     xtend = False
     return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend
 
@@ -196,11 +200,11 @@ else:
 
 a = in_arr[in_fld]  # do stuff with array
 
-if func == 'sequential number':
-    result = seq_number(a)
+if func == 'sequential text':
+    result = seq_text(a)
     idx = 0
 else:
-    result = seq_number(a)
+    result = seq_text(a)
     idx = 1
 #
 # ---- reassemble the table for extending ----
@@ -226,4 +230,4 @@ if __name__ == "__main__":
     : - print the script source name.
     : - run the _demo
     """
-    print("Script... {}".format(script))
+#    print("Script... {}".format(script))

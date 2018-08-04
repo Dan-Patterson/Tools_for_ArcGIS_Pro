@@ -3,11 +3,11 @@
 script name
 ===========
 
-Script :   array2raster.py
+Script :   ......py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-02-12
+Modified : 2018-06-04
 
 Purpose:  tools for working with numpy arrays
 
@@ -15,9 +15,8 @@ Useage :
 
 References
 ----------
-`<http://pro.arcgis.com/en/pro-app/arcpy/functions/
-numpyarraytoraster-function.htm>`_.
-
+`<http://pro.arcgis.com/en/pro-app/arcpy/data-access/numpyarraytotable.htm>`_.
+`<http://pro.arcgis.com/en/pro-app/arcpy/data-access/tabletonumpyarray.htm>`_.
 ---------------------------------------------------------------------
 """
 # ---- imports, formats, constants ----
@@ -35,7 +34,21 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 script = sys.argv[0]  # print this should you need to locate the script
 
 
-def tbl_2_np_array(in_tbl, flds):
+def has_nulls(a):
+    """Check to see if nulls are in the array passed from the featureclass
+    """
+    #
+    a_kind = a.dtype.kind
+    if a_kind == 'i':
+        m = a == np.iinfo(np.int32).min
+    elif a_kind == 'f':
+        m = np.isnan(a)
+    else:
+        m = a == None
+    return m
+
+
+def tbl_2_nparray(in_tbl, flds):
     """Form the TableToNumPyArray to account for nulls for various dtypes.
     This is essentially a shortcut to `arcpy.da.TableToNumPyArray`
 
@@ -55,17 +68,18 @@ def tbl_2_np_array(in_tbl, flds):
     ------
     arraytools, apt.py module
     """
-    int_min = np.iinfo(np.int32).min
-    float_min = np.finfo(np.float64).min
-    str_val = "None"
-    nulls = {'Double':float_min, 'Integer':int_min, 'String':str_val}
+    nulls = {'Double':np.nan,
+             'Integer':np.iinfo(np.int32).min,
+             'OID':np.iinfo(np.int32).min,
+             'String':"None"}
     #
     fld_dict = {i.name: i.type for i in arcpy.ListFields(in_tbl)}
     null_dict = {f:nulls[fld_dict[f]] for f in flds}
-    t = arcpy.da.TableToNumPyArray(in_table=in_tbl, field_names=flds,
+    a = arcpy.da.TableToNumPyArray(in_table=in_tbl,
+                                   field_names=flds,
                                    skip_nulls=False,
                                    null_value=null_dict)
-    return t
+    return a
 
 
 def your_func_here():
@@ -108,7 +122,7 @@ def _tool():
     # ---- call section for processing function
     #
     #in_arr = arcpy.da.TableToNumPyArray(in_tbl, vals)  # old
-    in_arr = tbl_2_np_array(in_tbl, flds)  # produce the table
+    in_arr = tbl_2_nparray(in_tbl, flds)  # produce the table
     #
     tweet("{!r:}".format(in_arr))
     #

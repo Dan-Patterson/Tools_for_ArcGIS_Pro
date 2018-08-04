@@ -1,34 +1,48 @@
 # -*- coding: UTF-8 -*-
 """
-sequential_funcs
-================
+strided_funcs
+=============
 
-Script:   sequential_funcs.py
+Script :   strided_funcs.py
 
-Author:   Dan.Patterson@carleton.ca
+Author :   Dan_Patterson@carleton.ca
 
-Modified: 2018-06-04
+Modified : 2018-07-28
 
-Purpose :
-    Calculating sequential values for fields in geodatabase tables
+Purpose:  tools for working with numpy arrays using srided functions
 
 Useage :
+
+Generate sequence
+
+def seq(N=100, diff_val=1):
+    '''generate a sequence in the range 0, N
+    +ve or -ve values in the range of 1 are added
+    to the values
+    '''
+    neg = np.random.random()*-diff_val
+    pos = np.random.random()*diff_val
+    a = np.arange(0, N, 1) + \
+       [[np.random.random(), -np.random.random()][np.random.random <= 0.5]
+       for i in range(0, N)]
+    return a
 
 References
 ----------
 `<http://pro.arcgis.com/en/pro-app/arcpy/data-access/numpyarraytotable.htm>`_.
 `<http://pro.arcgis.com/en/pro-app/arcpy/data-access/tabletonumpyarray.htm>`_.
-:---------------------------------------------------------------------:
+---------------------------------------------------------------------
 """
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
+from numpy.lib.stride_tricks import as_strided
+from arcpytools import fc_info, tweet  #, frmt_rec, _col_format
 import arcpy
-from arcpytools import fc_info, tweet
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
-np.set_printoptions(edgeitems=5, linewidth=80, precision=2, suppress=True,
+np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
 
@@ -49,18 +63,25 @@ def has_nulls(a):
     return m
 
 
-def has_nulls(a):
-    """Check to see if nulls are in the array passed from the featureclass
+def stride(a, win=(3, 3), stepby=(1,1)):
+    """Provide a 2D sliding/moving array view.  There is no edge
+    correction for outputs.  From arraytools.tools
     """
-    #
-    a_kind = a.dtype.kind
-    if a_kind == 'i':
-        m = a == np.iinfo(np.int32).min
-    elif a_kind == 'f':
-        m = np.isnan(a)
-    else:
-        m = a == None
-    return m
+
+    err = """Array shape, window and/or step size error.
+    Use win=(3,) with stepby=(1,) for 1D array
+    or win=(3,3) with stepby=(1,1) for 2D array
+    or win=(1,3,3) with stepby=(1,1,1) for 3D
+    ----    a.ndim != len(win) != len(stepby) ----
+    """
+    assert (a.ndim == len(win)) and (len(win) == len(stepby)), err
+    shape = np.array(a.shape)  # array shape (r, c) or (d, r, c)
+    win_shp = np.array(win)    # window      (3, 3) or (1, 3, 3)
+    ss = np.array(stepby)      # step by     (1, 1) or (1, 1, 1)
+    newshape = tuple(((shape - win_shp) // ss) + 1) + tuple(win_shp)
+    newstrides = tuple(np.array(a.strides) * ss) + a.strides
+    a_s = as_strided(a, shape=newshape, strides=newstrides).squeeze()
+    return a_s
 
 
 def tbl_2_nparray(in_tbl, flds):
@@ -86,7 +107,7 @@ def tbl_2_nparray(in_tbl, flds):
     nulls = {'Double':np.nan,
              'Integer':np.iinfo(np.int32).min,
              'OID':np.iinfo(np.int32).min,
-             'String':"None"}
+             'String':None}
     #
     fld_dict = {i.name: i.type for i in arcpy.ListFields(in_tbl)}
     null_dict = {f:nulls[fld_dict[f]] for f in flds}
@@ -97,71 +118,43 @@ def tbl_2_nparray(in_tbl, flds):
     return a
 
 
-def cum_sum(a):
-    """Cumulative sum"""
-    return np.nancumsum(a)
+def strided_func(a, step=3, func='mean'):
+    """ strides a numeric array in preparation for numeric calculations.
 
-def max_diff(a):
-    """diff from max"""
-    return a - np.nanmax(a)
-
-
-def mean_diff(a):
-    """diff from mean"""
-    return a - np.nanmean(a)
-
-
-def median_diff(a):
-    """diff from median"""
-    return a - np.nanmedian(a)
-
-
-def min_diff(a):
-    """diff from min"""
-    return a - np.nanmin(a)
-
-
-def percent(a):
-    """value percentage"""
-    m = has_nulls(a)
-    if not np.alltrue(m):
-        a = np.ma.MaskedArray(a, mask=m)
-        return (a/(np.ma.sum(a) * 1.0)) * 100.
-    else:
-        return (a/(np.sum(a) * 1.)) * 100.
-
-
-def seq_diff(a):
-    """Sequential diffs"""
-    return a[1:] - a[:-1]
-
-
-def seq_number(a):
-    """Sequentially number the class values in a field
+    `a` : array of floats form most functions
+        numeric array with shape (N,)
+    `step` : integer
+        the step window size such as a 3, 5 or 7 moving window
     """
-    uni = np.unique(a)
-    max_sze = [len(i) for i in uni]
-    out = np.chararray(len(a), max_sze + 5, True)
-    for u in uni:
-        idx = np.where(a == u)[0]
-        cnt = 0
-        for i in idx:
-            out[i] = "{}{:02.0f}".format(u, cnt)
-            cnt += 1
-    return out
+    def mode(b, axis=None):
+        """Calculate the modal value and optional count
+        """
+        modes, cnts = np.unique(b, return_counts=True, axis=axis)
+        idx = np.argmax(cnts)
+        return modes[idx]  #  counts[index]
+
+    start = step // 2  # integer division to determine the start for filling
+    b = stride(a, win=(step,), stepby=(1,))
+    out_array = np.zeros((a.shape[0],), dtype=a.dtype)
+    out_array.fill(np.nan)
+    if func == 'mean':
+        out_array[start: -start] = np.nanmean(b, axis=1)
+    elif func == 'median':
+        out_array[start: -start] = np.nanmedian(b, axis=1)
+    elif func == 'min':
+        out_array[start: -start] = np.nanmin(b, axis=1)
+    elif func == 'max':
+        out_array[start: -start] = np.nanmax(b, axis=1)
+    elif func == 'sum':
+        out_array[start: -start] = np.nansum(b, axis=1)
+    elif func == 'mode':
+        out_array[start: -start] = [mode(i) for i in b]
+    elif func == 'trend':  # returns -1, 0, 1 for down, flat, up
+        out_array[start: -start] = [mode(np.sign(np.diff(i))) for i in b]
+    return out_array
 
 
-def val_diff(a, val):
-    """diff from a value"""
-    return a - val
-
-
-def z_score(a):
-    """Z-scores"""
-    return mean_diff(a)/np.nanstd(a)
-
-
-def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
+def form_output(in_tbl, in_arr, out_fld="Result_",
                 vals=None, idx=0, xtend=False):
     """Form the output table given a field name and join field
 
@@ -183,6 +176,7 @@ def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
     desc = arcpy.da.Describe(in_tbl)
     tbl_path = desc['path']
     oid_fld = desc['OIDFieldName']   # 'OBJECTID'
+    del_fld = True
     fnames = [i.name for i in arcpy.ListFields(in_tbl)]
     if del_fld in ('True', 'true', True, 1):
         del_fld = True
@@ -211,121 +205,82 @@ def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
 #
 def _demo():
     """Code to run if in demo mode
-    Requires:
-        arcpytools fc_info, tweet
     """
     tbl = "Table_tools.gdb/pnts_2k_normal"
     in_tbl = "/".join(script.split("/")[:-2] + [tbl])
     #
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
     #
-    in_fld = 'Unif'  # 'Sequences2'  #'Ys'
-    del_fld = True
+    in_fld = 'Sequences'  # 'Norm'  # 'Ys'
     out_fld = 'Result_fld'
     in_flds = [oid_fld, in_fld]   # OBJECTID, plus another field
     in_arr = tbl_2_nparray(in_tbl, in_flds)
-    c = np.array(['cumulative sum', 'diff from max',
-                  'diff from mean', 'diff from median',
-                  'diff from min', 'diff from value',
-                  'percent', 'sequential diff',
-                  'sequential number',
-                  'z_score'])
-    func = 'percent'  #np.random.choice(c)
+    func = 'mean'  #np.random.choice(c)
+    win_size = 5
     xtend = False
-    val = None
-    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val
+    return in_tbl, in_arr, in_fld, out_fld, func, win_size, xtend
+
 
 def _tool():
     """run when script is from a tool
     """
     in_tbl = sys.argv[1]
     in_fld = sys.argv[2]
-    func = sys.argv[3]
-    out_fld = sys.argv[4]  # output field name
-    del_fld = sys.argv[5]
-    val = sys.argv[6]
-    #
+    out_fld = sys.argv[3]  # output field name
+    func = sys.argv[4]
+    win_size = int(sys.argv[5])
+
+    # ---- main tool section
+    desc = arcpy.da.Describe(in_tbl)
     # ---- main tool section
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
+    #
+    flds = [oid_fld, in_fld]
+    tbl_path = desc['path']
+    fnames = [i.name for i in arcpy.ListFields(in_tbl)]
+    if out_fld in fnames:
+        out_fld += 'dup'
+    out_fld = arcpy.ValidateFieldName(out_fld, tbl_path)
+    args = [in_tbl, in_fld, out_fld, tbl_path]
+    msg = "in_tbl {}\nin_fld {}\nout_fld  {}\ntbl_path  {}".format(*args)
+    tweet(msg)
+    #
+    # ---- call section for processing function
+    #
+    _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
+    #
+    # ---- remove the selection by calling the table
+    in_tbl  = desc['catalogPath']
     #
     flds = [oid_fld, in_fld]
     in_arr = tbl_2_nparray(in_tbl, flds)
     tweet("{!r:}".format(in_arr))
     xtend = True
-    return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val
-
+    return in_tbl, in_arr, in_fld, out_fld, func, win_size, xtend
 
 # ----------------------------------------------------------------------
 # .... final code section producing the featureclass and extendtable
-#
 if len(sys.argv) == 1:
     testing = True
-    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val = _demo()
+    in_tbl, in_arr, in_fld, out_fld, func, win_size, xtend = _demo()
 else:
     testing = False
-    in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend, val = _tool()
-
-a = in_arr[in_fld]  # do stuff with array
-
-if func == 'cumulative sum':
-    result = cum_sum(a)  # sequential diff call
-    idx = 0
-elif func == 'diff from max':
-    result = max_diff(a)
-    idx = 0
-elif func == 'diff from mean':
-    result = mean_diff(a)
-    idx = 0
-elif func == 'diff from median':
-    result = median_diff(a)
-    idx = 0
-elif func == 'diff from min':
-    result = min_diff(a)
-    idx = 0
-elif func == 'diff from value':
-    idx = 0
-    val_orig = val
-    try:    val = int(val)
-    except:    val = 0
-    try:    val = float(val)
-    except:    val = 0
-    finally:
-        frmt = "Difference value entered... {!r:}... Value used... {!r:}"
-        tweet(frmt.format(val_orig, val))
-        pass
-    result = val_diff(a, val)
-elif func == 'percent':
-    result = percent(a)
-    idx = 0
-elif func == 'sequential diff':
-    result = seq_diff(a)  # sequential diff call
-    idx = 1
-elif func == 'sequential number':
-    result = 'seq_number'
-    idx = 0
-elif func == 'z_score':
-    result = z_score(a)
-    idx = 0
-else:
-    result = seq_diff(a)
-    idx = 1
+    in_tbl, in_arr, in_fld, out_fld, func, win_size, xtend = _tool()
 #
+if not testing:
+    tweet('Some message here...')
+
 # ---- reassemble the table for extending ----
+
+a = in_arr[in_fld]
+result = strided_func(a, step=win_size, func=func)
+
 out_array = form_output(in_tbl,
                         in_arr,
                         out_fld=out_fld,
-                        del_fld=del_fld,
                         vals=result,
-                        idx=idx,
+                        idx=0,
                         xtend=xtend)
-msg = """
-Processing... {}
-function..... {}
-input field.. {}
-output field. {}
-"""
-
-tweet(msg.format(in_tbl, func, in_fld, out_fld))
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":
@@ -334,3 +289,4 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
+#    a = _demo()
