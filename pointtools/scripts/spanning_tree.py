@@ -2,7 +2,7 @@
 """
 :Script:   spanning_tree.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-02-27
+:Modified: 2018-06-13
 :
 :Original ... mst.py in my github
 :  extensive documentation is there.
@@ -209,36 +209,6 @@ def connect(a, dist_arr, edges):
 
 
 # ---- main section ----
-in_fc = sys.argv[1]
-out_fc = sys.argv[2]
-shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
-out_flds = [oid_fld, shp_fld]
-frmt = """\nScript.... {}\nUsing..... {}\nSR...{}\n"""
-args = [script, in_fc, SR.name]
-msg = frmt.format(*args)
-tweet(msg)
-a = arcpy.da.FeatureClassToNumPyArray(in_fc, shp_fld, "", SR)
-z = np.zeros((a.shape[0], 2))
-z[:, 0] = a['Shape'][:, 0]
-z[:, 1] = a['Shape'][:, 1]
-idx, a_srt, d = dist_arr(z)
-pairs = mst(d)
-o_d = connect(a_srt, d, pairs)
-
-os = a_srt[pairs[:, 0]]
-ds = a_srt[pairs[:, 1]]
-
-fr_to = np.array(list(zip(os, ds)))
-s = []
-for pt in fr_to:
-    s.append(arcpy.Polyline(arcpy.Array([arcpy.Point(*p) for p in pt]), SR))
-
-if arcpy.Exists(out_fc):
-    arcpy.Delete_management(out_fc)
-arcpy.CopyFeatures_management(s, out_fc)
-
-
-# ---- demo section ----
 def _demo():
     """A sample run demonstrating the principles and workflow"""
     a = np.array([[0, 0], [0, 8], [10, 8], [10, 0], [3, 4], [7, 4]])
@@ -248,6 +218,57 @@ def _demo():
     return a, d, pairs, o_d
 
 
+def _tool():
+    in_fc = sys.argv[1]
+    out_fc = sys.argv[2]
+    shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
+    out_flds = [oid_fld, shp_fld]
+    frmt = """\nScript.... {}\nUsing..... {}\nSR...{}\n"""
+    args = [script, in_fc, SR.name]
+    msg = frmt.format(*args)
+    tweet(msg)
+    a = arcpy.da.FeatureClassToNumPyArray(in_fc, shp_fld, "", SR)
+    if len(a) >= 2:
+        z = np.zeros((a.shape[0], 2))
+        z[:, 0] = a['Shape'][:, 0]
+        z[:, 1] = a['Shape'][:, 1]
+        idx, a_srt, d = dist_arr(z)
+        pairs = mst(d)
+        o_d = connect(a_srt, d, pairs)
+
+        os = a_srt[pairs[:, 0]]
+        ds = a_srt[pairs[:, 1]]
+
+        fr_to = np.array(list(zip(os, ds)))
+        s = []
+        for pt in fr_to:
+            s.append(arcpy.Polyline(arcpy.Array([arcpy.Point(*p) for p in pt]), SR))
+
+        if arcpy.Exists(out_fc):
+            arcpy.Delete_management(out_fc)
+        arcpy.CopyFeatures_management(s, out_fc)
+    else:
+        msg2 = """
+        |
+        ---- Potential User error......
+        Technically the script didn't fail.... but...
+        You need at least 2 different points... make sure you don't have an
+        incorrect selection
+        ---- Try again
+        |
+        """
+        tweet(dedent(msg2))
+
+
+# ---- demo section ----
+
+
+if len(sys.argv) == 1:
+    testing = True
+    a, d, pairs, o_d = _demo()
+else:
+    testing = False
+    _tool()
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
     """Main section...   """

@@ -12,7 +12,7 @@
 import sys
 import numpy as np
 import arcpy
-from arraytools import tweet
+from arcpytools import tweet
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
