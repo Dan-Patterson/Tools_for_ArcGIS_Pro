@@ -17,6 +17,11 @@ If you want a different system change
 >>> "{}{:02.0f}".format(UC[c], r)  # A01 to ..99
 >>> "{}{:03.0f}".format(UC[c], r)  # A001 to A999
 >>> # etc
+>>> c0 = code_grid(cols=5, rows=3, zero_based=False, shaped=True, bottom_up=False)
+[['A01' 'B01' 'C01' 'D01' 'E01']
+ ['A02' 'B02' 'C02' 'D02' 'E02']
+ ['A03' 'B03' 'C03' 'D03' 'E03']]
+
 ---------------------------------------------------------------------
 """
 
