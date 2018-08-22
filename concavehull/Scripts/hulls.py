@@ -19,7 +19,7 @@
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
-from arcpytools import tweet, output_polylines, output_polygons
+from arcpytools_ch import tweet, output_polylines, output_polygons
 import arcpy
 import warnings
 import math
