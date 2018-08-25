@@ -2,6 +2,9 @@
 
 Tools for working with polygon and polyline tools
 
+*Densify by Factor*
+
+Densify poly* features by a factor between the existing nodes.
 <a href="url"><img src="https://github.com/Dan-Patterson/tools_pro/blob/master/Polygon_lineTools/Images/Densify.png" align="right" height="400" width="400" ></a>
 
 
