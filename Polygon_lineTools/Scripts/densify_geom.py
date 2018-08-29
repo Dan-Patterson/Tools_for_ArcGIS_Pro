@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
 densify_geom
-===============
+============
 
 Script  :   densify_geom.py
 

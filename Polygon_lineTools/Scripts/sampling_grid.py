@@ -7,7 +7,7 @@ Script   :  sampling_grid.py
 
 Author   :  Dan.Patterson@carleton.ca
 
-Modified :  2018-01-28
+Modified :  2018-08-24
 
 Purpose  :  tools for working with numpy arrays
 
@@ -52,14 +52,12 @@ script = sys.argv[0]  # print this should you need to locate the script
 # ---- main functions ----
 def code_grid(cols=1, rows=1, zero_based=False, shaped=True, bottom_up=False):
     """produce spreadsheet like labelling, either zero or 1 based
-    :  zero - A0,A1  or ones - A1, A2..
-    :  dig = list('0123456789')  # string.digits
-    : import string .... string.ascii_uppercase
+    see: code_grid.py for more details
     """
     alph = list(" ABCDEFGHIJKLMNOPQRSTUVWXYZ")
     UC = [("{}{}").format(alph[i], alph[j]).strip()
           for i in range(27)
-          for j in range(1,27)]
+          for j in range(1, 27)]
     z = [1, 0][zero_based]
     rc = [1, 0][zero_based]
     c = ["{}{:02.0f}".format(UC[c], r) # pull in the column heading
@@ -83,19 +81,41 @@ def rotate(pnts, angle=0):
     return XY_r
 
 
+def triangle(dx=1, dy=1, cols=1, rows=1):
+    """Create a row of meshed triangles
+    """
+    grid_type = 'triangle'
+    a, dx, b = dx/2.0, dx, dx*1.5
+    Xu = [0.0, a, dx, 0.0]   # X, Y values for a unit triangle, point up
+    Yu = [0.0, dy, 0.0, 0.0]
+    Xd = [a, b, dx, a]       # X, Y values for a unit triangle, point down
+    Yd = [dy, dy, 0.0, dy]   # shifted by dx
+    seedU = np.array(list(zip(Xu, Yu)))
+    seedD = np.array(list(zip(Xd, Yd)))
+    seed = np.array([seedU, seedD])
+    a = [seed + [j * dx, i * dy]       # make the shapes
+         for i in range(0, rows)       # cycle through the rows
+         for j in range(0, cols)]      # cycle through the columns
+    a = np.asarray(a)
+    s1, s2, s3, s4 = a.shape
+    a = a.reshape(s1*s2, s3, s4)
+    return a, grid_type
+
+
 def rectangle(dx=1, dy=1, cols=1, rows=1):
     """Create the array of pnts to pass on to arcpy using numpy magic
     :  dx - increment in x direction, +ve moves west to east, left/right
     :  dy - increment in y direction, -ve moves north to south, top/bottom
     """
+    grid_type = 'rectangle'
     X = [0.0, 0.0, dx, dx, 0.0]       # X, Y values for a unit square
     Y = [0.0, dy, dy, 0.0, 0.0]
     seed = np.array(list(zip(X, Y)))  # [dx0, dy0] keep for insets
-    a = [seed + [j * dx, i * dy]       # make the shapes
-         for i in range(0, rows)   # cycle through the rows
-         for j in range(0, cols)]  # cycle through the columns
+    a = [seed + [j * dx, i * dy]      # make the shapes
+         for i in range(0, rows)      # cycle through the rows
+         for j in range(0, cols)]     # cycle through the columns
     a = np.asarray(a)
-    return a
+    return a, grid_type
 
 
 def hex_flat(dx=1, dy=1, cols=1, rows=1):
@@ -104,6 +124,7 @@ def hex_flat(dx=1, dy=1, cols=1, rows=1):
     :  dx - increment in x direction, +ve moves west to east, left/right
     :  dy - increment in y direction, -ve moves north to south, top/bottom
     """
+    grid_type = 'hex_flat'
     f_rad = np.deg2rad([180., 120., 60., 0., -60., -120., -180.])
     X = np.cos(f_rad) * dy
     Y = np.sin(f_rad) * dy            # scaled hexagon about 0, 0
@@ -114,7 +135,7 @@ def hex_flat(dx=1, dy=1, cols=1, rows=1):
     m = len(hexs)
     for j in range(1, rows):  # create the other rows
         hexs += [hexs[h] + [0, dy * 2 * j] for h in range(m)]
-    return hexs
+    return hexs, grid_type
 
 
 def hex_pointy(dx=1, dy=1, cols=1, rows=1):
@@ -123,6 +144,7 @@ def hex_pointy(dx=1, dy=1, cols=1, rows=1):
     :  dx - increment in x direction, +ve moves west to east, left/right
     :  dy - increment in y direction, -ve moves north to south, top/bottom
     """
+    grid_type = 'hex_pointy'
     p_rad = np.deg2rad([150., 90, 30., -30., -90., -150., 150.])
     X = np.cos(p_rad) * dx
     Y = np.sin(p_rad) * dy      # scaled hexagon about 0, 0
@@ -133,7 +155,7 @@ def hex_pointy(dx=1, dy=1, cols=1, rows=1):
     m = len(hexs)
     for j in range(1, rows):  # create the other rows
         hexs += [hexs[h] + [dx * (j % 2), dy * j] for h in range(m)]
-    return hexs
+    return hexs, grid_type
 
 
 def repeat(seed=None, corner=[0, 0], cols=1, rows=1, angle=0):
@@ -170,7 +192,11 @@ def output_polygons(output_shp, SR, pnts):
     return output_shp
 
 
-def extend_tbl(output_shp, rows, cols):
+def extend_tbl(output_shp, grid_type, rows, cols):
+    """Produce the column with the grid labels
+    """
+    if grid_type == 'triangle':
+        cols = cols * 2
     shp = rows*cols
     code_fld = np.empty((shp,), dtype=[('IDs', '<i4'), ('Grid_codes', '<U3')])
     codes = code_grid(cols=cols, rows=rows, zero_based=False,
@@ -202,7 +228,7 @@ def _demo(seed=None, out_fc=False, SR=None, corner=[0, 0], angle=0):
     cols, rows = [3, 3]
     if seed is None:
 #        seed = rectangle(dx=1, dy=1, cols=3, rows=3)
-        seed = hex_pointy(dx=10, dy=10, cols=3, rows=3)
+        seed, grid_type = hex_pointy(dx=10, dy=10, cols=3, rows=3)
 #        seed = hex_flat(dx=10, dy=10, cols=3, rows=3)
         seed_t = 'rectangle'
     if SR is None:
@@ -228,13 +254,15 @@ def _tool():
     angle = float(sys.argv[10])
     corner = [corn_x, corn_y]
     if seed_t == 'rectangle':
-        seed = rectangle(dx, dy, cols, rows)
+        seed, grid_type = rectangle(dx, dy, cols, rows)
     elif seed_t == 'hex_pointy':
-        seed = hex_pointy(dx, dy, cols, rows)
+        seed, grid_type = hex_pointy(dx, dy, cols, rows)
     elif seed_t == 'hex_flat':
-        seed = hex_flat(dx, dy, cols, rows)
+        seed, grid_type = hex_flat(dx, dy, cols, rows)
+    elif seed_t == 'triangles':
+        seed, grid_type = triangle(dx, dy, cols, rows)
     else:
-        seed = rectangle(dx, dy, cols, rows)
+        seed, grid_type = rectangle(dx, dy, cols, rows)
     # ----
     msg = """
     : --------------------------------------------------------------------
@@ -244,15 +272,16 @@ def _tool():
     : Top leftcorner .. {}
     : Size..... {} (dx, dy)
     : cols/rows {}
+    : grid type {}
     : sample seed
     {}
     """
     args = [out_fc, SR, seed_t, corner, [dx, dy],
-            [cols, rows], seed[0]]
+            [cols, rows], grid_type, seed[0]]
     arcpy.AddMessage(dedent(msg).format(*args))
     arcpy.GetMessages()
     pnts = repeat(seed=seed, corner=corner, cols=cols, rows=rows, angle=angle)
-    return out_fc, SR, pnts, rows, cols
+    return out_fc, SR, pnts, grid_type, rows, cols
 
 
 # ----------------------------------------------------------------------
@@ -262,11 +291,11 @@ if len(sys.argv) == 1:
     pnts = _demo()
 else:
     testing = False
-    out_fc, SR, pnts, rows, cols = _tool()
+    out_fc, SR, pnts, grid_type, rows, cols = _tool()
 #
 if not testing:
     output_shp = output_polygons(out_fc, SR, pnts)
-    extend_tbl(output_shp, rows, cols)
+    extend_tbl(output_shp, grid_type, rows, cols)
     print('\nSampling grid was created... {}'.format(out_fc))
 
 # ----------------------------------------------------------------------

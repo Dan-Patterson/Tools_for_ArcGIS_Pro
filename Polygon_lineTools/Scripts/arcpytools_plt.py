@@ -13,9 +13,13 @@
 # ---- imports, formats, constants ----
 import sys
 from textwrap import dedent
+import warnings
+
 import numpy as np
 import arcpy
 # from arcpytools import array_fc, array_struct, tweet
+
+warnings.simplefilter('ignore', FutureWarning)
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -175,9 +179,12 @@ def fc_array(in_fc, flds="*", allpnts=True):
     fld_names = [f.name for f in flds_oth]
     oid_geom = [oid_fld, 'SHAPE@X', 'SHAPE@Y']
     nulls = {'Double':np.nan,
+             'Single':np.nan,
+             'Short':np.nan,
+             'Long':np.nan,
+             'Float':np.nan,
              'Integer':np.iinfo(np.int32).min,
-             'OID':np.iinfo(np.int32).min,
-             'String':"None"}
+             'String':None}
     fld_dict = {i.name: i.type for i in flds_oth}
     null_dict = {f:nulls[fld_dict[f]] for f in fld_names}
     if flds == "":                        # return just OID and Shape values
