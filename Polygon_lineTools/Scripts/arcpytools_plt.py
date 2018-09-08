@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   arcpytools.py
+:Script:   arcpytools_plt.py
 :Author:   Dan.Patterson@carleton.ca
 :Modified: 2018-06-21
 :Purpose:  tools for working with numpy arrays
@@ -97,6 +97,52 @@ def fc_info(in_fc, prn=False):
 
 # ---- geometry related -----------------------------------------------------
 #
+def get_polys(in_fc):
+    """Return polygons from a polygon featureclass
+    """
+    out_polys = []
+    out_ids = []
+    with arcpy.da.SearchCursor(in_fc,  ["SHAPE@", "OID@"]) as cursor:
+        for row in cursor:
+            out_polys.append(row[0])
+            out_ids.append(row[1])
+    return out_polys, out_ids
+
+
+def _poly_ext(p):
+    """poly* extent
+    """
+    L, B = p.extent.lowerLeft.X, p.extent.lowerLeft.Y
+    R, T = p.extent.upperRight.X, p.extent.upperRight.Y
+    return L, B, R, T
+
+
+def trans_rot(a, angle):
+    """simplified translate and rotate
+    """
+    cent = a.mean(axis=0)
+    angle = np.radians(angle)
+    c, s = np.cos(angle), np.sin(angle)
+    R = np.array(((c, s), (-s,  c)))
+    return  np.einsum('ij,kj->ik', a - cent, R) + cent
+
+
+def cal_area(poly, cuts, cutters, factor):
+    """Calculate the areas
+    """
+    tot_area = poly.area
+    fract_areas = np.array([c.area/tot_area for c in cuts])
+    c_sum = np.cumsum(fract_areas)
+    f_list = np.linspace(0.0, 1.0, factor, endpoint=False)
+    idxs = [np.argwhere(c_sum <= i)[-1][0] for i in f_list[1:]]
+    out = []
+    for idx in idxs:
+        c_line = cutters[idx]
+        left, right = poly.cut(c_line)
+        out.append([left.area, c_line])
+    return out
+
+
 def _xyID(in_fc, to_pnts=True):
     """Convert featureclass geometry (in_fc) to a simple 2D structured array
     :  with ID, X, Y values. Optionally convert to points, otherwise centroid.

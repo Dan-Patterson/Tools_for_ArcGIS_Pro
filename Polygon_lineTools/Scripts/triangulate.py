@@ -88,12 +88,18 @@ def tri_pnts(pnts, testing=False):
     Parameters:
     -----------
     pnts : np.array
-        points in array format
+        Points in array format.
     out : array
         an array of triangle points
+
+    Notes:
+    ------
+    >>> pnts = pnts.reshape((1,) + pnts.shape)  # a 3D set of points (ndim=3)
+    >>> [pnts]  # or pass in as a list
     """
     out = []
     for ps in pnts:
+        ps = np.unique(ps, axis=0)  # get the unique points only
         avg = np.mean(ps, axis=0)
         p =  ps - avg
         tri = Delaunay(p)
@@ -146,23 +152,24 @@ else:
 #
 #keep_flds = "*"
 #shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
-pts, a, SR = pnt_groups(in_fc)
-t = tri_pnts(pts, True)
-polys = poly(t, SR)
-if arcpy.Exists(out_fc):
-    arcpy.Delete_management(out_fc)
-arcpy.CopyFeatures_management(polys, "in_memory/temp")
-arcpy.MakeFeatureLayer_management("in_memory/temp", "temp")
-arcpy.management.SelectLayerByLocation("temp",
-                                       "WITHIN_CLEMENTINI",
-                                       in_fc, None,
-                                       "NEW_SELECTION", "NOT_INVERT")
-arcpy.CopyFeatures_management("temp", out_fc)
+if not testing:
+    pts, a, SR = pnt_groups(in_fc)
+    t = tri_pnts(pts, True)
+    polys = poly(t, SR)
+    if arcpy.Exists(out_fc):
+        arcpy.Delete_management(out_fc)
+    arcpy.CopyFeatures_management(polys, "in_memory/temp")
+    arcpy.MakeFeatureLayer_management("in_memory/temp", "temp")
+    arcpy.management.SelectLayerByLocation("temp",
+                                           "WITHIN_CLEMENTINI",
+                                           in_fc, None,
+                                           "NEW_SELECTION", "NOT_INVERT")
+    arcpy.CopyFeatures_management("temp", out_fc)
 
-#arcpy.analysis.Clip("in_memory/temp", in_fc, out_fc, None)
-#
-#arcpy.analysis.Intersect(["in_memory/temp",in_fc], out_fc,
-#                         "ONLY_FID", None, "INPUT")
+    #arcpy.analysis.Clip("in_memory/temp", in_fc, out_fc, None)
+    #
+    #arcpy.analysis.Intersect(["in_memory/temp",in_fc], out_fc,
+    #                         "ONLY_FID", None, "INPUT")
 
 
 # ----------------------------------------------------------------------

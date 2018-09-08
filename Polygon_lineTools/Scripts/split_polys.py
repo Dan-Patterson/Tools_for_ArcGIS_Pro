@@ -7,7 +7,7 @@ Script :   split_polys.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified:  2018-06-14
+Modified:  2018-09-07
 
 Purpose :  tools for working with numpy arrays
 
@@ -47,7 +47,7 @@ import math
 from textwrap import dedent
 import numpy as np
 import warnings
-from arcpytools_plt import tweet, fc_info
+from arcpytools_plt import tweet, fc_info, _poly_ext, trans_rot, cal_area
 import arcpy
 
 warnings.simplefilter('ignore', FutureWarning)
@@ -71,38 +71,6 @@ Number of splits . {}
 Split types ...... {}
 """
 
-
-def _poly_ext(p):
-    """poly* extent
-    """
-    L, B = p.extent.lowerLeft.X, p.extent.lowerLeft.Y
-    R, T = p.extent.upperRight.X, p.extent.upperRight.Y
-    return L, B, R, T
-
-def trans_rot(a, angle):
-    """simplified translate and rotate
-    """
-    cent = a.mean(axis=0)
-    angle = np.radians(angle)
-    c, s = np.cos(angle), np.sin(angle)
-    R = np.array(((c, s), (-s,  c)))
-    return  np.einsum('ij,kj->ik', a - cent, R) + cent
-
-
-def cal_area(poly, cuts, cutters, factor):
-    """Calculate the areas
-    """
-    tot_area = poly.area
-    fract_areas = np.array([c.area/tot_area for c in cuts])
-    c_sum = np.cumsum(fract_areas)
-    f_list = np.linspace(0.0, 1.0, factor, endpoint=False)
-    idxs = [np.argwhere(c_sum <= i)[-1][0] for i in f_list[1:]]
-    out = []
-    for idx in idxs:
-        c_line = cutters[idx]
-        left, right = poly.cut(c_line)
-        out.append([left.area, c_line])
-    return out
 
 def _cut_poly(poly, p_id, step=1.0, split_fac=4, SR=None):
     """Perform the poly* cutting and return the result.
