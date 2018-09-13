@@ -7,7 +7,7 @@ Script  :   densify_geom.py
 
 Author  :   Dan.Patterson@carleton.ca
 
-Modified :  2018-08-19
+Modified :  2018-09-12
 
 Purpose :   Densify geometry by a factor.
 
@@ -18,7 +18,7 @@ Notes :
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
-from arcpytools_plt import tweet, fc_info
+from arcpytools_plt import tweet, fc_info, fc_array
 import arcpy
 
 ft = {'bool': lambda x: repr(x.astype('int32')),
@@ -96,44 +96,6 @@ def _get_shapes(in_fc):
     with arcpy.da.SearchCursor(in_fc, 'SHAPE@') as cursor:
         a = [row[0] for row in cursor]
     return a
-
-
-def _ndarray(in_fc, to_pnts=True, flds=None, SR=None):
-    """Convert featureclass geometry (in_fc) to a structured ndarray including
-    :  options to select fields and specify a spatial reference.
-    :
-    :Requires:
-    :--------
-    : in_fc - input featureclass
-    : to_pnts - True, convert the shape to points. False, centroid returned.
-    : flds - '*' for all, others: 'Shape',  ['SHAPE@X', 'SHAPE@Y'], or specify
-    """
-    if flds is None:
-        flds = "*"
-    if SR is None:
-        desc = arcpy.da.Describe(in_fc)
-        SR = desc['spatialReference']
-    args = [in_fc, flds, None, SR, to_pnts, (None, None)]
-    cur = arcpy.da.SearchCursor(*args)
-    a = cur._as_narray()
-    del cur
-    return a
-
-
-def _get_attributes(in_fc):
-    """Get the attributes of features, returns the centroid coordinates
-    :  as fields in the table.
-    """
-    dt_b = [('IDs', '<i4'), ('Xc', '<f8'), ('Yc', '<f8')]
-    b = _ndarray(in_fc, to_pnts=False)
-    dt = [[n, t] for n, t in b.dtype.descr[2:]]
-    for i in dt:
-        if i[0] in ["Shape_Length", "Shape_Area", "Shape"]:
-            i[0] = i[0] + "_orig"
-    dt = [tuple(i) for i in dt]
-    dt_b.extend(dt)
-    b.dtype = dt_b
-    return b
 
 
 def obj_shapes(in_, SR):
@@ -229,11 +191,11 @@ def densify(polys, fact=2, sp_ref=None):
 
 if len(sys.argv) == 1:
     in_pth = script.split("/")[:-2] + ["Polygon_lineTools.gdb"]
-    in_fc = "/".join(in_pth) + "/Polygons"#    in_fc = r"C:\Git_Dan\a_Data\arcpytools_demo.gdb\xy1000_tree"
-    out_fc = "/".join(in_pth) + '/x1'
+    in_fc = "/".join(in_pth) + "/shapes_mtm9"#    in_fc = r"C:\Git_Dan\a_Data\arcpytools_demo.gdb\xy1000_tree"
+    out_fc = "/".join(in_pth) + '/x2'
     fact = 2
     out_type = 'Polygon'  # 'Polyline' or 'Points'
-    testing = True
+    testing = False
 else:
     in_fc = sys.argv[1]  #
     out_fc = sys.argv[2]  #
@@ -249,7 +211,10 @@ if arcpy.Exists(temp):
 arcpy.MultipartToSinglepart_management(in_fc, temp)
 polys = _get_shapes(temp)
 a = densify(polys, fact=fact, sp_ref=SR)
-b = _get_attributes(temp)
+b, _, _ = fc_array(in_fc, flds="*", allpnts=False) #_get_attributes(temp)
+dt = b.dtype.descr
+dtn = [(i[0].replace("@", "_"), i[1]) for i in dt]
+b.dtype = np.dtype(dtn)
 out_shps = arcpnts_poly(a, out_type=out_type, SR=SR)
 #
 # ---- if not testing, save the geometry and extend (join) the attributes
@@ -257,7 +222,7 @@ if not testing:
     if arcpy.Exists(out_fc):
         arcpy.Delete_management(out_fc)
     arcpy.CopyFeatures_management(out_shps, out_fc)
-    arcpy.da.ExtendTable(out_fc, 'OBJECTID', b, 'IDs')
+    arcpy.da.ExtendTable(out_fc, 'OBJECTID', b, 'OBJECTID', append_only=False)
 # ---- cleanup
 arcpy.Delete_management(temp)
 

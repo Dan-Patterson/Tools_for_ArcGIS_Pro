@@ -28,10 +28,7 @@ This is a good one
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
-from textwrap import dedent
-from arraytools.geom import *
-from arcpytools_plt import(tweet, fc_info, _poly_ext,
-                            trans_rot, cal_area, get_polys)
+from arcpytools_plt import(tweet, fc_info, get_polys)
 import arcpy
 
 
@@ -93,6 +90,7 @@ def to_polygon(pnts):
         polygons.append(pl)
     return polygons
 
+
 def cal_sect(poly, cutters, pnts, factor):
     """Calculate the areas
     """
@@ -104,17 +102,8 @@ def cal_sect(poly, cutters, pnts, factor):
     f_list = np.linspace(0.0, 1.0, factor, endpoint=False)
     idxs = [np.argwhere(c_sum <= i)[-1][0] for i in f_list[1:]]
     splits = np.split(cuts, idxs, axis=0)
-#    out = []
-#    fr = [0]
-#    too = []
-#    for i in idxs:
-#        too.append(i)
-#        fr.append(i)
-#    too.append(-1)
-#    msg = "from {}  to {}".format(fr, too)
-#    tweet(msg)
-#    out = [cuts[fr[i]:too[i]] for i in range(len(fr))]
     return idxs, splits
+
 
 def sectors(radius=100, theta=0.5, xc=0.0, yc=0.0):
     """Create sectors radiating out from the geometry center.  A circle is
@@ -132,8 +121,6 @@ def sectors(radius=100, theta=0.5, xc=0.0, yc=0.0):
     angles = np.deg2rad(np.arange(180.0, -180.0-theta, step=-theta))
     x_s = radius*np.cos(angles)     # X values
     y_s = radius*np.sin(angles)     # Y values
-    # pnts = np.c_[x_s, y_s]         # 15 micro secs vs
-    # pnts = np.vstack((x_s, y_s)).T # 3 for vstack.T vs 2 for xy func
     pnts = xy(x_s, y_s)
     # ----
     fr = pnts[:-1]
@@ -145,20 +132,6 @@ def sectors(radius=100, theta=0.5, xc=0.0, yc=0.0):
     pnts = pnts + cent
     return sect, pnts
 
-def process2(in_polys):
-    """variant
-    __geo_interface__ is still the fastest to get coordinates
-    """
-    ps = [i.__geo_interface__['coordinates'] for i in in_polys]
-    exts = [max((i[2] - i[0]), (i[3] - i[1])) for i in ps]
-
-    result_ = []
-    for i in range(len(in_polys)):
-        poly = in_polys[i]
-        ext = max(poly.extent.width, poly.extent.height)
-        xc, yc = cent = [poly.centroid.X, poly.centroid.Y]
-        sect, pnts = sectors(radius=ext, theta=0.5, xc=xc, yc=yc)
-    return sect, pnts
 
 def process(in_polys):
     """Process the splits
@@ -190,10 +163,7 @@ def process(in_polys):
         sect, pnts = sectors(radius=ext, theta=0.5, xc=xc, yc=yc)  # theta=1
         cutters = to_polygon(sect)
         idxs, splits = cal_sect(poly, cutters, pnts, s_fac)
-#        frum = idxs[:-1]
-#        too = idxs[1:]
         ps = np.split(pnts, np.array(idxs)+1)
-#        new_polys = [np.vstack((cent, i, cent)) for i in pnt_parts]
         new_polys = [np.vstack((cent, ps[i-1], ps[i][0], cent))
                      for i in range(0, len(ps))]
         r = to_polygon(new_polys)

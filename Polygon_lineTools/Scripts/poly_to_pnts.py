@@ -7,7 +7,7 @@ Script :   poly_to_pnts.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-08-05
+Modified : 2018-09-12
 
 Purpose:
 --------
@@ -96,10 +96,10 @@ def to_pnts(in_fc, out_fc, keep_flds=None, to_file=False):
 if len(sys.argv) == 1:
     testing = True
     in_pth = script.split("/")[:-2] + ["Polygon_lineTools.gdb"]
-    in_fc = "/".join(in_pth) + "/shapes_mtm9"
-    out_fc = "/".join(in_pth) + "/shape_pnts2"
+    in_fc = "/".join(in_pth) + "/Polygons"
+    out_fc = "/".join(in_pth) + "/poly_pnts"
     keep_flds = "*"
-    out = to_pnts(in_fc, out_fc, keep_flds, to_file=False)
+    out = to_pnts(in_fc, out_fc, keep_flds, to_file=True)
 else:
     in_fc = sys.argv[1]
     out_fc = sys.argv[2]

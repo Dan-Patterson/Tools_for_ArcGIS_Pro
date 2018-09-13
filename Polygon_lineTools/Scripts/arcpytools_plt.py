@@ -2,7 +2,7 @@
 """
 :Script:   arcpytools_plt.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-06-21
+:Modified: 2018-09-12
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -12,6 +12,7 @@
 """
 # ---- imports, formats, constants ----
 import sys
+import os
 from textwrap import dedent
 import warnings
 
@@ -222,15 +223,17 @@ def fc_array(in_fc, flds="*", allpnts=True):
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)  # get the base information
     flds_all = arcpy.ListFields(in_fc)
     flds_oth = [f for f in flds_all if f.type not in ('OID', 'Geometry')]
-    fld_names = [f.name for f in flds_oth]
+    fld_names = [f.name for f in flds_oth
+                 if f.name not in ["Shape_Length", "Shape_Area", "Shape"]]
     oid_geom = [oid_fld, 'SHAPE@X', 'SHAPE@Y']
     nulls = {'Double':np.nan,
              'Single':np.nan,
-             'Short':np.nan,
-             'Long':np.nan,
+             'Short':np.iinfo(np.int32).min,
+             'Long':np.iinfo(np.int32).min,
              'Float':np.nan,
              'Integer':np.iinfo(np.int32).min,
-             'String':None}
+             'String':str(None),
+             'Text':str(None)}
     fld_dict = {i.name: i.type for i in flds_oth}
     null_dict = {f:nulls[fld_dict[f]] for f in fld_names}
     if flds == "":                        # return just OID and Shape values
@@ -242,6 +245,8 @@ def fc_array(in_fc, flds="*", allpnts=True):
         for f in flds_oth:
             if f.name in flds:
                 out_flds.append(f.name)
+#    pth = os.path.dirname(in_fc)
+#    out_flds = [arcpy.ValidateFieldName(f, pth) for f in out_flds]
     frmt = """\nRunning 'fc_array' with ....
     \nfeatureclass... {}\nFields... {}\nAll pnts... {}\nSR... {}
     """
@@ -249,10 +254,11 @@ def fc_array(in_fc, flds="*", allpnts=True):
     msg = dedent(frmt).format(*args)
     tweet(msg)
     a = arcpy.da.FeatureClassToNumPyArray(in_fc,
-                                          out_flds,
-                                          "",
-                                          SR,
-                                          allpnts,
+                                          field_names=out_flds,
+                                          where_clause="",
+                                          spatial_reference=SR,
+                                          explode_to_points=allpnts,
+                                          skip_nulls=False,
                                           null_value=null_dict)
     # out it goes in array format
     return a, out_flds, SR
