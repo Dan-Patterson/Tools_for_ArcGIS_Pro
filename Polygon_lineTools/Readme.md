@@ -2,6 +2,10 @@
 
 Tools for working with polygon and polyline tools
 
+#Update 2018-09-12#
+
+Added split by area to the split poly* features tool.  I will update with images and explanation when I get a chance.
+
 ## Densify by Factor and Features to Points
 
 Densify poly`*` features by a factor between the existing nodes.  The points on the image show the result when converted to points.
