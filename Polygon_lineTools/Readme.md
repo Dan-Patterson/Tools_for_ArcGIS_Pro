@@ -8,6 +8,8 @@ Densify poly`*` features by a factor between the existing nodes.  The points on 
 
 <a href="url"><img src="https://github.com/Dan-Patterson/tools_pro/blob/master/Polygon_lineTools/Images/Densify.png" align="center" width="400" ></a>
 
+<a href="url"><img src="https://github.com/Dan-Patterson/tools_pro/blob/master/Polygon_lineTools/Images/poly_pnts.png" align="center" width="400" ></a>
+
 ## Split Poly`*` Features`*`
 
 Split poly`*` features based on a width or height factor.
