@@ -8,6 +8,8 @@ Densify poly`*` features by a factor between the existing nodes.  The points on 
 
 <a href="url"><img src="https://github.com/Dan-Patterson/tools_pro/blob/master/Polygon_lineTools/Images/Densify.png" align="center" width="400" ></a>
 
+The poly* to points retains the original poly feature ID then adds a new column with the point ID for that feature.  The labelling was simply a concatenation of the two bits of information.
+
 <a href="url"><img src="https://github.com/Dan-Patterson/tools_pro/blob/master/Polygon_lineTools/Images/poly_pnts.png" align="center" width="400" ></a>
 
 ## Split Poly`*` Features`*`
