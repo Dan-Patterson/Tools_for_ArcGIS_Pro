@@ -39,25 +39,22 @@ def angles_(a, in_deg=True, kind="sum"):
     a = np.asarray([[i.X, i.Y] for j in a for i in j])
     if len(a) < 2:
         return None
-    elif len(a) == 2:  # **** check
+    elif len(a) == 2:
         ba = a[1] - a[0]
         return np.arctan2(*ba[::-1])
-    else:
-        angles = []
-        if np.allclose(a[0], a[-1]):  # closed loop
-            a = a[:-1]
-            r = (-1,) + tuple(range(len(a))) + (0,)
-        else:
-            r = tuple(range(len(a)))
-        for i in range(len(r)-2):
-            p0, p1, p2 = a[r[i]], a[r[i+1]], a[r[i+2]]
-            ba = p1 - p0
-            bc = p1 - p2
-            cr = np.cross(ba, bc)
-            dt = np.dot(ba, bc)
-            ang = np.arctan2(np.linalg.norm(cr), dt)
-            if not np.allclose(ang, np.pi):  # check for extra vertices
-                angles.append(ang)
+    a0 = a[0:-2]
+    a1 = a[1:-1]
+    a2 = a[2:]
+    ba = a1 - a0
+    bc = a1 - a2
+    cr = np.cross(ba, bc)
+    dt = np.einsum('ij,ij->i', ba, bc)
+#    ang = np.arctan2(np.linalg.norm(cr), dt)
+    ang = np.arctan2(cr, dt)
+    two_pi = np.pi*2.
+    angles = np.where(ang<0, ang + two_pi, ang)
+    if in_deg:
+        angles = np.degrees(angles)
     if in_deg:
         angles = np.degrees(angles)
     if kind == "sum":

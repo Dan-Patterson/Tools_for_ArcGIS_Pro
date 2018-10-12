@@ -1,13 +1,18 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   table2numpyarray.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-03-18
-:Purpose:  tools for working with numpy arrays
-:Useage:
-:
-:References:
-:
+table2numpyarray
+================
+
+Script :   table2numpyarray.py
+
+Author:   Dan.Patterson@carleton.ca
+
+Modified: 2018-03-18
+
+Purpose:  tools for working with numpy arrays
+
+Useage:
+
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----

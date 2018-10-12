@@ -161,6 +161,21 @@ def z_score(a):
     return mean_diff(a)/np.nanstd(a)
 
 
+def seq_count(a):
+    """See `running_count` in arraytools.tools for a fuller version
+    """
+    idx = a.argsort(kind='mergesort')
+    s_a = a[idx]
+    neq = np.where(s_a[1:] != s_a[:-1])[0] + 1
+    run = np.ones(a.shape, int)
+    run[neq[0]] -= neq[0]
+    run[neq[1:]] -= np.diff(neq)
+    out = np.empty_like(run)
+    out[idx] = run.cumsum()
+    z = np.array(["{}_{:0>3}".format(*i) for i in list(zip(a, out))])
+    return z
+
+
 def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
                 vals=None, idx=0, xtend=False):
     """Form the output table given a field name and join field
