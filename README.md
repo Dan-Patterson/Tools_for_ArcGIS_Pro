@@ -10,6 +10,9 @@ Toolboxes are contained in separate folders.  Each folder has a scripts folder c
 
 To use, all you need to do is download scripts folder and the toolbox and install in your working path or in a path accessible to all projects.
 
+### **Polygon_line tools**
+
+A collection of tools directed towards work with poly* features.
 
 ### **field_calculator**
 
