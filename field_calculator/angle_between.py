@@ -1,26 +1,17 @@
 # -*- coding: UTF-8 -*-
-x0 = 0.0
-y0 = 0.0
-angle = 0.0
-def angle_between(shape, from_north):
-    """Calculate the angle/azimuth between sequential points in a point file.
-    :Use:
-    : .... angle_between(!Shape!, True) ....
-    """
-    global x0
-    global y0
+"""-----------------------------------------
+Input shape field: returns angle between 0 and <360 based upon the first and last point
+azimuth_to(!Shape!,from_x, from_y, from_north=True)  
+ie azimuth_to(!Shape!, 300050, 5000050, True)
+"""
+import math
+def azimuth_to(shape, from_x, from_y, from_north):
     x = shape.centroid.X
     y = shape.centroid.Y
-    if x0 == 0.0 and y0 == 0.0:
-        x0 = x
-        y0 = y
-        return 0.0
-    radian = math.atan2((y - y0), (x - x0))
+    radian = math.atan2((y - from_y), (x - from_x))
     angle = math.degrees(radian)
     if from_north:
         angle = (450 - angle) % 360
-    x0 = x
-    y0 = y
     return angle
-#__esri_field_calculator_splitter__
-#angle_between(!Shape!, True)
+__esri_field_calculator_splitter__
+azimuth_to(!Shape!, 300050, 5000050, True)

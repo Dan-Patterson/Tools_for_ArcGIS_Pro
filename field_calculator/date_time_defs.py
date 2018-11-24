@@ -72,8 +72,10 @@ def _demo():
 if __name__ == "__main__":
     """ A simple test """
     n = str(datetime.now())
+
     print("\nget_date def...\nDate from {} ... {}".format(n, get_date(n)))
     print("\nget_time def...\nDate from {} ... {}".format(n, get_time(n)))
+
     _demo()
 
     vals = [45.501234567890, -45.501234567890,

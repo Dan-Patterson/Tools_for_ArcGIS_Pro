@@ -29,7 +29,7 @@ def seq_dup(val):
 #        ret = 1
 #    else:
 #        ret = 0
-#    fld = val\
+#    fld = val
 #    return ret
 #'''
 #arcpy.management.CalculateField("f1", "IndFld", "seq_dup(!Test!),

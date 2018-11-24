@@ -7,6 +7,37 @@
 :
 :---------------------------------------------------------------------:
 """
+def dd_mm_ss(dd, cal_long=True, use_sign=False, use_quad=False):
+    """decimal degrees to deg dec min"""
+    deg_sign = u'\N{DEGREE SIGN}'
+    deg = int(dd)
+    if deg < 0:
+        quad = ['S', 'W'][cal_long]
+        deg = abs(deg)
+    else:
+        quad = ['N', 'E'][cal_long]
+    if not use_quad:
+        quad = ""
+    if not use_sign:
+        deg_sign = ""
+    mins, secs = divmod(dd*3600, 60)
+    degs, mins = divmod(mins, 60)
+    frmt = "{}{}-{:0.0f}-{:05.2f}{}".format(deg, deg_sign, mins, secs, quad)
+    return frmt
+
+
+def dd_dmm(dd, cal_long=True):
+    """decimal degrees to deg dec min"""
+    deg_sign = u'\N{DEGREE SIGN}'
+    deg = int(dd)
+    if deg < 0:
+        quad = ['S', 'W'][cal_long]
+        deg = abs(deg)
+    else:
+        quad = ['N', 'E'][cal_long]
+    minsec = divmod((deg - dd)*60, 60)[-1]
+    frmt = "{}{} {:0.2f}' {}".format(deg, deg_sign, minsec, quad)
+    return frmt
 
 
 def ddm_ddd(a, sep=" "):
