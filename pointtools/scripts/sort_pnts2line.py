@@ -27,7 +27,7 @@ import sys
 from textwrap import dedent
 import numpy as np
 from arcpytools import fc_info, tweet
-from arcpytools import frmt_rec, make_row_format, _col_format, form_
+from arcpytools_pnt import frmt_rec, make_row_format, _col_format, form_
 import arcpy
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
@@ -86,7 +86,7 @@ def tbl_2_nparray(in_tbl, flds):
     int_min = np.iinfo(np.int32).min
     float_min = np.finfo(np.float64).min
     str_val = "None"
-    nulls = {'Double':float_min, 'Integer':int_min, 'String':str_val}
+    nulls = {'Double':float_min, 'Integer':int_min, 'Text':str_val}
     #
     fld_dict = {i.name: i.type for i in arcpy.ListFields(in_tbl)}
     null_dict = {f:nulls[fld_dict[f]] for f in flds}
@@ -119,8 +119,8 @@ def _demo():
     # ---- randomize
     idx = np.random.permutation(idx0)
     x = x0[idx]
-    y = y0[idx]    
-    a = np.c_[x, y]  # points array    
+    y = y0[idx]
+    a = np.c_[x, y]  # points array
     d = e_dist(a, a)
     np.fill_diagonal(d, np.inf)
     #

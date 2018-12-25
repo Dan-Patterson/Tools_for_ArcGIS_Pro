@@ -16,7 +16,7 @@ import os
 from textwrap import dedent
 import numpy as np
 import arcpy
-from arcpytools import _describe, fc_info, tweet
+from arcpytools_pnt import _describe, fc_info, tweet
 import warnings
 
 warnings.simplefilter('ignore', FutureWarning)

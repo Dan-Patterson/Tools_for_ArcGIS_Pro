@@ -17,14 +17,14 @@
 import sys
 import numpy as np
 import arcpy
-from arcpytools import fc_info, tweet
+from arcpytools_pnt import fc_info, tweet
 
 # from textwrap import dedent
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.1f}'.format}
 np.set_printoptions(edgeitems=10, linewidth=120, precision=2,
-                    suppress=True, threshold=100, formatter=ft)
+                    suppress=True, threshold=140, formatter=ft)
 np.ma.masked_print_option.set_display('-')
 
 script = sys.argv[0]
@@ -126,7 +126,7 @@ def connect(in_fc, out_fc, N=1, testing=False):
     :  Calls n_near to produce the nearest features.
     """
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
-    a = arcpy.da.FeatureClassToNumPyArray(in_fc, "*", "", SR)
+    a = arcpy.da.FeatureClassToNumPyArray(in_fc, shp_fld, "", SR)
     dt = '<f8'
     b = np.array([tuple(i) for i in a[shp_fld]], dtype=dt)
     coords, dist, n_array = n_near(b, N, ordered=True)  # ---- run n_near ----
@@ -172,7 +172,7 @@ N = int(sys.argv[2])
 out_fc = sys.argv[3]
 args = [script, in_fc, N, out_fc]
 tweet(frmt.format(*args))                    # call tweet
-connect(in_fc, out_fc, N=N, testing=False)   # call connect
+ret = connect(in_fc, out_fc, N=N, testing=False)   # call connect
 
 # ---------------------------------------------------------------------
 if __name__ == "__main__":

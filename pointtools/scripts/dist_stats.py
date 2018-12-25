@@ -18,7 +18,7 @@ Purpose:
 import sys
 import numpy as np
 import arcpy
-from arcpytools import fc_info, tweet, make_row_format, _col_format, form_
+from arcpytools_pnt import fc_info, tweet, make_row_format, _col_format, form_
 from textwrap import dedent
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
@@ -88,10 +88,10 @@ def process(in_fc, id_fld, prn=True):
         var_y = np.var(a[:, 1])
         stand_dist = np.sqrt(var_x + var_y)
         dm = _e_dist(a)
-        dm_result = np.tril(dm, -1)      
+        dm_result = np.tril(dm, -1)
         vals = dm_result[np.nonzero(dm_result)]
         stats = [vals.mean(), vals.min(), vals.max(), vals.std()]
-        # hdr = "Distance matrix...({}) ".format(i) 
+        # hdr = "Distance matrix...({}) ".format(i)
         # m = form_(dm_result, deci=1, wdth=80, title=hdr, prn=False)
         args = (i, len(a), *cent, *min_, *max_, stand_dist, *stats) #, m]
         tbl.append(args)

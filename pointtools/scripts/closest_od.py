@@ -19,7 +19,7 @@ import sys
 import warnings
 import numpy as np
 import arcpy
-from arcpytools import fc_info, tweet
+from arcpytools_pnt import fc_info, tweet
 
 warnings.simplefilter('ignore', FutureWarning)
 

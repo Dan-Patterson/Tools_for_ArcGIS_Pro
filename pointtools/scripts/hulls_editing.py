@@ -18,7 +18,7 @@
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
-from arcpytools import output_polylines, output_polygons
+from arcpytools_pnt import output_polylines, output_polygons
 import arcpy
 import warnings
 import math

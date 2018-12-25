@@ -1,25 +1,28 @@
 # -*- coding: UTF-8 -*-
 """
-Script :  mesh_pnts.py
+rotate_pnts
+===========
 
-Author :  Dan.Patterson@carleton.ca
+Script:  rotate_pnts.py
 
-Modified : 2018-07-23
+Author:  Dan.Patterson@carleton.ca
+
+Modified: 2018-07-23
 
 Notes:
 -----
-- arcpy.da.FeatureClassToNumPyArray(in_table, field_names, {where_clause},
-                                    {spatial_reference}, {explode_to_points},
-                                    {skip_nulls}, {null_value})
-- arcpy.da.NumPyArrayToFeatureClass(in_array, out_table, shape_fields,
-                                    {spatial_reference})
+>>> arcpy.da.FeatureClassToNumPyArray(in_table, field_names, {where_clause},
+                                      {spatial_reference}, {explode_to_points},
+                                      {skip_nulls}, {null_value})
+>>> arcpy.da.NumPyArrayToFeatureClass(in_array, out_table, shape_fields,
+                                      {spatial_reference})
 
-- data references for standalone testing is from the Point_tools database
+Data references for standalone testing is from the Point_tools database
 """
 import sys
 import numpy as np
 import arcpy
-from arcpytools import fc_info, tweet
+from arcpytools_pnt import fc_info, tweet
 
 script = sys.argv[0]
 
@@ -123,3 +126,13 @@ Output points.... {}
 """
 tweet(msg.format(in_fc, angle, out_fc))
 # ---- the end ----
+# ----------------------------------------------------------------------
+# __main__ .... code section
+if __name__ == "__main__":
+    """Optionally...
+    : - print the script source name.
+    : - run the _demo
+    """
+    fc = "/Point_tools.gdb/std_dist_center"
+    flder = "/".join(script.split("/")[:-2])
+    in_fc = flder + fc

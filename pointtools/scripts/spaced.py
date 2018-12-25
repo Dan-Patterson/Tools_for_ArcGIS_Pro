@@ -29,7 +29,7 @@ import sys
 from textwrap import dedent
 import numpy as np
 # import arcpy
-from arcpytools import array_fc, array_struct, tweet
+from arcpytools_pnt import array_fc, array_struct, tweet
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}

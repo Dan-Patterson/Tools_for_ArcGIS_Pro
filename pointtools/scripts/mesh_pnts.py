@@ -12,7 +12,7 @@ import sys
 import numpy as np
 import arcpy
 from textwrap import dedent
-from arcpytools import array_fc, fc_info, tweet
+from arcpytools_pnt import array_fc, fc_info, tweet
 
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
