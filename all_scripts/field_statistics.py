@@ -33,19 +33,24 @@ script = sys.argv[0]  # print this should you need to locate the script
 
 def skew_kurt(a, avg, var_x, std_x, col=True, mom='both'):
     """Momental and unbiased skewness
-    :Emulates the nan functions approach to calculating these parameters
-    :when data contains nan values.
-    :Requires:
-    :---------
-    :  a - an array of float/double values where there are at least 3 non-nan
-    :      numbers in each column.  This is not checked since this situation
-    :      should never arise in real world data sets that have been checked.
-    :  moment - both, skew or kurt  to return the moments
-    :Notes:
-    :------
-    : a= np.arange(16.).reshape(4,4)
-    : mask = [0, 5, 10, 15]
-    : masked_array = np.where(a == mask, np.nan, a)
+
+    Emulates the nan functions approach to calculating these parameters
+    when data contains nan values.
+
+    Requires
+    ---------
+    a :
+        an array of float/double values where there are at least 3 non-nan
+        numbers in each column.  This is not checked since this situation
+        should never arise in real world data sets that have been checked.
+    moment :
+        both, skew or kurt  to return the moments
+
+    Notes:
+    -----
+        >>> a= np.arange(16.).reshape(4,4)
+        >>> mask = [0, 5, 10, 15]
+        >>> masked_array = np.where(a == mask, np.nan, a)
     """
 #    a, mask = _replace_nan(a, 0.)  # produce a masked of the nan values
     if len(a.shape) == 1:
@@ -73,7 +78,8 @@ def skew_kurt(a, avg, var_x, std_x, col=True, mom='both'):
 
 
 # -----------------------------------------------------------------------------
-# functions
+# ---- arraytools functions ----
+# ------------------------------
 
 def tweet(msg):
     """Produce a message (msg)for both arcpy and python
@@ -87,18 +93,24 @@ def tweet(msg):
 #  frmt_rec requires _col_format
 def _col_format(a, c_name="c00", deci=0):
     """Determine column format given a desired number of decimal places.
-    :  Used by frmt_struct.
-    :  a - a column in an array
-    :  c_name - column name
-    :  deci - desired number of decimal points if the data are numeric
-    :Notes:
-    :-----
-    :  The field is examined to determine whether it is a simple integer, a
-    :  float type or a list, array or string.  The maximum width is determined
-    :  based on this type.
-    :  Checks were also added for (N,) shaped structured arrays being
-    :  reformatted to (N, 1) shape which sometimes occurs to facilitate array
-    :  viewing.  A kludge at best, but it works for now.
+    Used by frmt_struct.
+
+    `a` : column
+        A column in an array.
+    `c_name` : text
+        column name
+    `deci` : int
+        Desired number of decimal points if the data are numeric
+
+    Notes:
+    -----
+        The field is examined to determine whether it is a simple integer, a
+        float type or a list, array or string.  The maximum width is determined
+        based on this type.
+
+        Checks were also added for (N,) shaped structured arrays being
+        reformatted to (N, 1) shape which sometimes occurs to facilitate array
+        viewing.  A kludge at best, but it works for now.
     """
     a_kind = a.dtype.kind
     if a_kind in ('i', 'u'):  # ---- integer type
@@ -171,6 +183,8 @@ def frmt_rec(a, deci=2, use_names=True, prn=True):
         return msg
 
 
+# -----------------------------------------------------------------------------
+#
 def cal_stats(in_fc, col_names):
     """Calculate stats for an array of double types, with nodata (nan, None)
     :  in the column.

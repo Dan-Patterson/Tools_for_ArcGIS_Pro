@@ -2,7 +2,7 @@
 """
 :Script:   arcpytools.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-02-27
+:Modified: 2018-03-31
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -34,13 +34,12 @@ def tweet(msg):
     """Produce a message for both arcpy and python
     : msg - a text message
     """
-    m = "\n{}\n".format(msg)
+    m = "{}".format(msg)
     arcpy.AddMessage(m)
     print(m)
-#    return None
 
 
-def _describe(in_fc):
+def _describe(in_fc=None):
     """Simply return the arcpy.da.Describe object
     : desc.keys() an abbreviated list...
     : [... 'OIDFieldName'... 'areaFieldName', 'baseName'... 'catalogPath',
@@ -49,19 +48,31 @@ def _describe(in_fc):
     :  'rasterFieldName', ..., 'shapeFieldName', 'shapeType',
     :  'spatialReference',  ...]
     """
-    return arcpy.da.Describe(in_fc)
-
+    if in_fc is not None:
+        return arcpy.da.Describe(in_fc)
+    else:
+        return None
 
 def fc_info(in_fc, prn=False):
     """Return basic featureclass information, including...
-    :
-    : shp_fld  - field name which contains the geometry object
-    : oid_fld  - the object index/id field name
-    : SR       - spatial reference object (use SR.name to get the name)
-    : shp_type - shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
-    : - others: 'areaFieldName', 'baseName', 'catalogPath','featureType',
-    :           'fields', 'hasOID', 'hasM', 'hasZ', 'path'
-    : - all_flds =[i.name for i in desc['fields']]
+
+    Parameters:
+    -----------
+    - shp_fld  :
+        field name which contains the geometry object
+    - oid_fld  :
+        the object index/id field name
+    - SR       :
+        spatial reference object (use SR.name to get the name)
+    - shp_type :
+        shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
+    - others   :
+        'areaFieldName', 'baseName', 'catalogPath','featureType','fields',
+        'hasOID', 'hasM', 'hasZ', 'path'
+
+
+     - all_flds :
+         [i.name for i in desc['fields']]
     """
     desc = _describe(in_fc)
     args = ['shapeFieldName', 'OIDFieldName', 'shapeType', 'spatialReference']
@@ -76,6 +87,8 @@ def fc_info(in_fc, prn=False):
         return shp_fld, oid_fld, shp_type, SR
 
 
+# ---- geometry related -----------------------------------------------------
+#
 def _xyID(in_fc, to_pnts=True):
     """Convert featureclass geometry (in_fc) to a simple 2D structured array
     :  with ID, X, Y values. Optionally convert to points, otherwise centroid.
@@ -89,14 +102,14 @@ def _xyID(in_fc, to_pnts=True):
     return a
 
 
-
 def array_struct(a, fld_names=['X', 'Y'], dt=['<f8', '<f8']):
     """Convert an array to a structured array
-    :Requires:
-    :--------
-    :  a - an ndarray with shape at least (N, 2)
-    :  dt = dtype class
-    :  names - names for the fields
+
+    Parameters:
+    -----------
+    - a : an ndarray with shape at least (N, 2)
+    -  dt : dtype class
+    -  names : names for the fields
     """
     dts = [(fld_names[i], dt[i]) for i in range(len(fld_names))]
     z = np.zeros((a.shape[0],), dtype=dts)
@@ -107,11 +120,16 @@ def array_struct(a, fld_names=['X', 'Y'], dt=['<f8', '<f8']):
 
 
 def array_fc(a, out_fc, fld_names, SR):
-    """array to featureclass/shapefile...optionally including all fields
-    :  syntax: array_fc(a, out_fc, fld_names, SR)
-    :  see: NumpyArrayToFeatureClass, ListFields for information and options
-    :  out_fc:   featureclass/shapefile... complete path
-    :  fld_names:  is the Shapefield name ie ['Shape'] or ['X', 'Y's]
+    """Array to featureclass/shapefile...optionally including all fields
+
+    Parameters:
+    -----------
+    - out_fc :  featureclass/shapefile... complete path
+    - fld_names : the Shapefield name ie ['Shape'] or ['X', 'Y's]
+    - SR : spatial reference of the output
+
+    See also :
+        NumpyArrayToFeatureClass, ListFields for information and options
     """
     if arcpy.Exists(out_fc):
         arcpy.Delete_management(out_fc)
@@ -120,12 +138,31 @@ def array_fc(a, out_fc, fld_names, SR):
 
 
 def fc_array(in_fc, flds, allpnts):
-    """Convert featureclass to an ndarray...with optional fields besides the
-    :  FID/OIDName and Shape fields.
-    :Syntax: read_shp(input_FC,other_flds, explode_to_points)
-    :   input_FC    shapefile
-    :   other_flds   "*", or specific fields ['FID','Shape','SomeClass', etc]
-    :   see:  FeatureClassToNumPyArray, ListFields for more information
+    """Convert a featureclass to an ndarray...with optional fields besides the
+    FID/OIDName and Shape fields.
+
+    Parameters:
+    -----------
+    in_fc : text
+        Full path to the geodatabase and the featureclass name
+
+    flds : text or list
+        - ``''   : just an object id and shape field``
+        - ``'*'  : all fields in the featureclass or``
+        - ``list : specific fields ['OBJECTID','Shape','SomeClass', etc]``
+
+    allpnts : boolean
+        - True `explodes` geometry to individual points.
+        - False returns the centroid
+
+    Requires:
+    ---------
+        fc_info(in_fc) function
+
+    See also:
+    ---------
+        FeatureClassToNumPyArray, ListFields for more information in current
+        arcpy documentation
     """
     out_flds = []
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)  # get the base information
@@ -139,9 +176,8 @@ def fc_array(in_fc, flds, allpnts):
         for f in fields:
             if f.name in flds:
                 out_flds.append(f.name)
-    frmt = """
-    Inside....
-    Running 'fc_array' with...\n{}\nFields...{}\nAll pnts...{}\nSR...{}
+    frmt = """\nRunning 'fc_array' with ....
+    \nfeatureclass... {}\nFields... {}\nAll pnts... {}\nSR... {}
     """
     args = [in_fc, out_flds, allpnts, SR.name]
     msg = dedent(frmt).format(*args)
@@ -235,11 +271,21 @@ def output_polylines(out_fc, SR, pnt_groups):
 
 def output_polygons(out_fc, SR, pnt_groups):
     """Produce the output polygon featureclass.
-    :Requires:
-    :--------
-    : - A list of lists of points
-    :   aline = [[0, 0], [1, 1]]  # a list of points
-    :   aPolygon = [aline]       # a list of lists of points
+
+    Parameters:
+    -----------
+    out_fc : string
+        The path and name of the featureclass to be created.
+    SR : spatial reference of the output featureclass
+    pnts_groups :
+        The point groups, list of lists of points, to include parts rings.
+
+    Requires:
+    --------
+
+    - A list of lists of points.  Four points form a triangle is the minimum
+    -  aline = [[0, 0], [1, 1]]  # a list of points
+    -  aPolygon = [aline]        # a list of lists of points
     """
     msg = '\nRead the script header... A projected coordinate system required'
     assert (SR is not None), msg
@@ -253,6 +299,205 @@ def output_polygons(out_fc, SR, pnt_groups):
         arcpy.Delete_management(out_fc)
     arcpy.CopyFeatures_management(polygons, out_fc)
     return
+
+# ---- formatting, from arraytools ------------------------------------------
+#
+# ----------------------------------------------------------------------
+# (4) frmt_rec .... code section
+#  frmt_rec requires _col_format
+def _col_format(a, c_name="c00", deci=0):
+    """Determine column format given a desired number of decimal places.
+    Used by frmt_struct.
+
+    `a` : column
+        A column in an array.
+    `c_name` : text
+        column name
+    `deci` : int
+        Desired number of decimal points if the data are numeric
+
+    Notes:
+    -----
+        The field is examined to determine whether it is a simple integer, a
+        float type or a list, array or string.  The maximum width is determined
+        based on this type.
+
+        Checks were also added for (N,) shaped structured arrays being
+        reformatted to (N, 1) shape which sometimes occurs to facilitate array
+        viewing.  A kludge at best, but it works for now.
+    """
+    a_kind = a.dtype.kind
+    if a_kind in ('i', 'u'):  # ---- integer type
+        w_, m_ = [':> {}.0f', '{:> 0.0f}']
+        col_wdth = len(m_.format(a.max())) + 1
+        col_wdth = max(len(c_name), col_wdth) + 1  # + deci
+        c_fmt = w_.format(col_wdth, 0)
+    elif a_kind == 'f' and np.isscalar(a[0]):  # ---- float type with rounding
+        w_, m_ = [':> {}.{}f', '{:> 0.{}f}']
+        a_max, a_min = np.round(np.sort(a[[0, -1]]), deci)
+        col_wdth = max(len(m_.format(a_max, deci)),
+                       len(m_.format(a_min, deci))) + 1
+        col_wdth = max(len(c_name), col_wdth) + 1
+        c_fmt = w_.format(col_wdth, deci)
+    # ---- lists, arrays, strings. Check for (N,) vs (N,1)
+    # I made some changes in how col_wdth is determined, old is commented
+    else:
+        if a.ndim == 1:  # ---- check for (N, 1) format of structured array
+            a = a[0]
+        dt = a.dtype.descr[0][1]
+        col_wdth = int("".join([i for i in dt if i.isdigit()]))
+#       col_wdth = max([len(str(i)) for i in a])
+        col_wdth = max(len(c_name), col_wdth) + 1  # + deci
+        c_fmt = "!s:>" + "{}".format(col_wdth)
+    return c_fmt, col_wdth
+
+
+def pd_(a, deci=2, use_names=True, prn=True):
+    """see help for `frmt_rec`..."""
+    ret = frmt_rec(a, deci=deci, use_names=use_names, prn=prn)
+    return ret
+
+
+def frmt_rec(a, deci=2, use_names=True, prn=True):
+    """Format a structured array with a mixed dtype.
+
+    NOTE : Can be called as `pd_(a, ... )` to emulate pandas dataframes
+        You should limit large arrays to a slice ie. a[:50]
+
+    Requires:
+    -------
+    `a` : array
+        A structured/recarray
+    `deci` : int
+        To facilitate printing, this value is the number of decimal
+        points to use for all floating point fields.
+    `use_names` : boolean
+        If no names are available, then create them
+    `prn` : boolean
+        True to print, False to return the string
+    Notes:
+    -----
+        `_col_format` : does the actual work of obtaining a representation of
+        the column format.
+
+        It is not really possible to deconstruct the exact number of decimals
+        to use for float values, so a decision had to be made to simplify.
+    """
+    dt_names = a.dtype.names
+    N = len(dt_names)
+    c_names = [["C{:02.0f}".format(i) for i in range(N)], dt_names][use_names]
+    # ---- get the column formats from ... _col_format ----
+    dts = []
+    wdths = []
+    pair = list(zip(dt_names, c_names))
+    for i in range(len(pair)):
+        fld, nme = pair[i]
+        c_fmt, col_wdth = _col_format(a[fld], c_name=nme, deci=deci)
+        dts.append(c_fmt)
+        wdths.append(col_wdth)
+    row_frmt = " ".join([('{' + i + '}') for i in dts])
+    hdr = ["!s:>" + "{}".format(wdths[i]) for i in range(N)]
+    hdr2 = " ".join(["{" + hdr[i] + "}" for i in range(N)])
+    header = "--n--" + hdr2.format(*c_names)
+    header = "\n{}\n{}".format(header, "-"*len(header))
+    txt = [header]
+    # ---- check for structured arrays reshaped to (N, 1) instead of (N,) ----
+    len_shp = len(a.shape)
+    idx = 0
+    for i in range(a.shape[0]):
+        if len_shp == 1:  # ---- conventional (N,) shaped array
+            row = " {:03.0f} ".format(idx) + row_frmt.format(*a[i])
+        else:             # ---- reformatted to (N, 1)
+            row = " {:03.0f} ".format(idx) + row_frmt.format(*a[i][0])
+        idx += 1
+        txt.append(row)
+    msg = "\n".join([i for i in txt])
+    if prn:
+        print(msg)
+    else:
+        return msg
+
+# ----------------------------------------------------------------------
+# (5) form_ ... code section .....
+#  form_ requires make_row_format
+def make_row_format(dim=3, cols=5, a_kind='f', deci=1,
+                    a_max=10, a_min=-10, wdth=100, prnt=False):
+    """Format the row based on input parameters
+
+    `dim` - int
+        Number of dimensions
+    `cols` : int
+        Columns per dimension
+
+    `a_kind`, `deci`, `a_max` and `a_min` allow you to specify a data type,
+    number of decimals and maximum and minimum values to test formatting.
+    """
+    if a_kind not in ['f', 'i']:
+        a_kind = 'f'
+    w_, m_ = [[':{}.0f', '{:0.0f}'], [':{}.{}f', '{:0.{}f}']][a_kind == 'f']
+    m_fmt = max(len(m_.format(a_max, deci)), len(m_.format(a_min, deci))) + 1
+    w_fmt = w_.format(m_fmt, deci)
+    suffix = '  '
+    while m_fmt*cols*dim > wdth:
+        cols -= 1
+        suffix = '.. '
+    row_sub = (('{' + w_fmt + '}')*cols + suffix)
+    row_frmt = (row_sub*dim).strip()
+    if prnt:
+        frmt = "Row format: dim cols: ({}, {})  kind: {} decimals: {}\n\n{}"
+        print(dedent(frmt).format(dim, cols, a_kind, deci, row_frmt))
+        a = np.random.randint(a_min, a_max+1, dim*cols)
+        col_hdr(wdth//10)  # run col_hdr to produce the column headers
+        print(row_frmt.format(*a))
+    else:
+        return row_frmt
+
+
+def form_(a, deci=2, wdth=100, title="Array", prefix=". . ", prn=True):
+    """Alternate format to frmt_ function.
+    Inputs are largely the same.
+    """
+    def _piece(sub, i, frmt, linewidth):
+        """piece together 3D chunks by row"""
+        s0 = sub.shape[0]
+        block = np.hstack([sub[j] for j in range(s0)])
+        txt = ""
+        if i is not None:
+            fr = (":arr[{}" + ", :{}"*len(a.shape[1:]) + "]\n")
+            txt = fr.format(i, *sub.shape)
+        for line in block:
+            ln = frmt.format(*line)[:linewidth]
+            end = ["\n", "...\n"][len(ln) >= linewidth]
+            txt += indent(ln + end, ". . ")
+        return txt
+    # ---- main section ----
+    out = "\n{}... ndim: {}  shape: {}\n".format(title, a.ndim, a.shape)
+    linewidth = wdth
+    if a.ndim <= 1:
+        return a
+    elif a.ndim == 2:
+        a = a.reshape((1,) + a.shape)
+    # ---- pull the 1st and 3rd dimension for 3D and 4D arrays
+    frmt = make_row_format(dim=a.shape[-3],
+                           cols=a.shape[-1],
+                           a_kind=a.dtype.kind,
+                           deci=deci,
+                           a_max=a.max(),
+                           a_min=a.min(),
+                           wdth=wdth,
+                           prnt=False)
+    if a.ndim == 3:
+        s0, s1, s2 = a.shape
+        out += _piece(a, None, frmt, linewidth)  # ---- _piece ----
+    elif a.ndim == 4:
+        s0, s1, s2, _ = a.shape
+        for i in range(s0):
+            out = out + "\n" + _piece(a[i], i, frmt, linewidth)  # ---- _piece
+    if prn:
+        print(out)
+    else:
+        return out
+
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":
@@ -262,6 +507,6 @@ if __name__ == "__main__":
     """
 #    print("Script... {}".format(script))
 #    _demo()
-    gdb_fc = ['Data', 'point_tools.gdb', 'radial_pnts']
-    in_fc = "/".join(script.split("/")[:-2] + gdb_fc)
-    result = fc_array(in_fc, flds="", allpnts=True)  # a, out_flds, SR
+#    gdb_fc = ['Data', 'point_tools.gdb', 'radial_pnts']
+#    in_fc = "/".join(script.split("/")[:-2] + gdb_fc)
+#    result = fc_array(in_fc, flds="", allpnts=True)  # a, out_flds, SR

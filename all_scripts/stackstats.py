@@ -1,13 +1,13 @@
 # -*- coding: UTF-8 -*-ct
 """
-rasterstats
+stackstats
 ===========
 
-Script:   rasterstats.py
+Script:   stackstats.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-03-29
+Modified: 2018-11-23
 
 Purpose:  tools for working with numpy arrays
 
@@ -17,13 +17,17 @@ Requires:
 
 References:
 -----------
-  https://community.esri.com/blogs/dan_patterson/2018/02/06/cell-\
-statistics-made-easy-raster-data-over-time
+
+`<https://community.esri.com/blogs/dan_patterson/2018/02/06/cell-\
+statistics-made-easy-raster-data-over-time>`_.
 
 """
+# pylint: disable=C0103
+# pylint: disable=R1710
+# pylint: disable=R0914
+
 # ---- imports, formats, constants ----
 import sys
-from textwrap import dedent, indent
 import numpy as np
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
@@ -75,7 +79,8 @@ def check_stack(arrs):
 
 def mask_stack(arrs, nodata=None):
     """Produce masks for a 3d array"""
-    if nodata is None:
+    if (nodata is None) or (arrs.ndim < 2) or (arrs.ndim > 3):
+        print("\n...mask_stack requires a 3d array and a nodata value\n")
         return arrs
     m = (arrs[:, ...] == nodata).any(0)
     msk = [m for i in range(arrs.shape[0])]
@@ -203,7 +208,7 @@ def stack_stats(arrs, ax=0, nodata=None):
     nan_std = np.nanstd(a_m, axis=ax)
     nan_var = np.nanvar(a_m, axis=ax)
     stats = [nan_sum, nan_min, nan_mean, nan_median, nan_max, nan_std, nan_var]
-    if len(ax) == 1:
+    if np.isscalar(ax):
         nan_cumsum = np.nancumsum(a_m, axis=ax)
         stats.append(nan_cumsum)
     return stats
@@ -211,7 +216,13 @@ def stack_stats(arrs, ax=0, nodata=None):
 
 def stack_stats_tbl(arrs, nodata=None):  # col_names, args):
     """Produce the output table
-    :   ('N_', '<i4'), ('N_nan', '<i4')
+
+    Returns:
+    --------
+    Table of statistical results by band.  The dtype is shown below
+    dtype=[('Band', '<i4'), ('N', '<i4'), ('N_nan', '<i4'), ('Sum', '<f8'),
+           ('Min', '<f8'), ('Mean', '<f8'), ('Med', '<f8'), ('Max', '<f8'),
+           ('Std', '<f8'), ('Var', '<f8')])
     """
     stats = stack_stats(arrs, ax=(1, 2), nodata=nodata)
     d = [(i, '<f8')
@@ -264,4 +275,4 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
-    stack = _demo_stack()
+#    stack = _demo_stack()

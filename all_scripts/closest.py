@@ -35,19 +35,24 @@ arcpy.env.overwriteOutput = True
 
 def n_near(a, N=3, ordered=True):
     """Return the coordinates and distance to the nearest N points within
-    :  an 2D numpy array, 'a', with optional ordering of the inputs.
-    :Requires:
-    :--------
-    : a - an ndarray of uniform int or float dtype.  Extract the fields
-    :     representing the x,y coordinates before proceeding.
-    : N - number of closest points to return
-    :Returns:
-    :-------
-    :  A structured array is returned containing an ID number.  The ID number
-    :  is the ID of the points as they were read.  The array will contain
-    :  (C)losest fields and distance fields
-    :  (C0_X, C0_Y, C1_X, C1_Y, Dist0, Dist1 etc) representing coordinates
-    :  and distance to the required 'closest' points.
+    an 2D numpy array, `a`, with optional ordering of the inputs.
+
+    Requires:
+    ---------
+    ``a  :`` array
+        an ndarray of uniform int or float dtype.  Extract the fields
+        representing the x,y coordinates before proceeding.
+    ``N  :`` number
+        number of closest points to return
+
+    Returns:
+    -------
+    A structured array is returned containing an ID number.  The ID number
+    is the ID of the points as they were read.  The array will contain
+    (C)losest fields and distance fields
+
+    (C0_X, C0_Y, C1_X, C1_Y, Dist0, Dist1 etc) representing coordinates
+    and distance to the required 'closest' points.
     """
     if not (isinstance(a, (np.ndarray)) and (N >= 1)):
         print("\nInput error...read the docs\n\n{}".format(n_near.__doc__))
@@ -92,19 +97,26 @@ def n_near(a, N=3, ordered=True):
 
 def _uniq_by_row_col(a, axis=0):
     """unique to emulate numpy 1.13 ...
-    :Requires:
-    :--------
-    : a - an array of uniform dtype with ndim > 1
-    : axis - if 0, then unique rows are returned, if 1, then unique columns
-    :
-    :References:
-    :----------
-    : - https://github.com/numpy/numpy/blob/master/numpy/lib/arraysetops.py
-    : - http://stackoverflow.com/questions/16970982/
-    :          find-unique-rows-in-numpy-array?noredirect=1&lq=1
-    :Notes:
-    :-----  Must reshape to a contiguous 2D array for this to work...
-    : a.dtype.char - ['AllInteger'] + ['Datetime'] + 'S') = 'bBhHiIlLqQpPMmS'
+
+    Requires:
+    ---------
+    - a : array
+        an array of uniform dtype with ndim > 1
+    - axis : number
+        if 0, then unique rows are returned, if 1, then unique columns
+
+    References:
+    -----------
+    [1] https://github.com/numpy/numpy/blob/master/numpy/lib/arraysetops.py
+
+    [2] http://stackoverflow.com/questions/16970982/find-unique-rows-in-numpy-\
+    array?noredirect=1&lq=1
+
+    Notes:
+    ------
+    Must reshape to a contiguous 2D array for this to work...
+
+    a.dtype.char : ['AllInteger'] + ['Datetime'] + 'S') = 'bBhHiIlLqQpPMmS'
     """
     a = np.asanyarray(a)
     a = np.swapaxes(a, axis, 0)
@@ -123,7 +135,8 @@ def _uniq_by_row_col(a, axis=0):
 
 def connect(in_fc, out_fc, N=1, testing=False):
     """Run the analysis to form the closest point pairs.
-    :  Calls n_near to produce the nearest features.
+
+    Calls n_near to produce the nearest features.
     """
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, "*", "", SR)
@@ -167,21 +180,31 @@ frmt = """\n
 :Producing.. {}\n
 """
 
-in_fc = sys.argv[1]
-N = int(sys.argv[2])
-out_fc = sys.argv[3]
-args = [script, in_fc, N, out_fc]
-tweet(frmt.format(*args))                    # call tweet
-connect(in_fc, out_fc, N=N, testing=False)   # call connect
+
+def tool():
+    """run the tool """
+    in_fc = sys.argv[1]
+    N = int(sys.argv[2])
+    out_fc = sys.argv[3]
+    args = [script, in_fc, N, out_fc]
+    tweet(frmt.format(*args))                    # call tweet
+    connect(in_fc, out_fc, N=N, testing=False)   # call connect
+
+
+if len(sys.argv) == 1:
+    in_fc = r"C:\GIS\array_projects\data\Pro_base.gdb\small"
+    # out_fc = r"C:\GIS\array_projects\data\Pro_base.gdb\ft3"
+    out_fc = None
+    N = 2
+    testing = True
+    a, b, r0, r1, r2, r3 = connect(in_fc, out_fc, N=N, testing=True)
+    args = [script, in_fc, N, out_fc]
+    tweet(frmt.format(*args))
+else:
+    tool()
+
 
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
     """Main section...   """
 #    print("Script... {}".format(script))
-"""
-    in_fc = r"C:\GIS\array_projects\data\Pro_base.gdb\small"
-    out_fc = r"C:\GIS\array_projects\data\Pro_base.gdb\ft3"
-    N = 1
-    testing = True
-    a, b, r0, r1, r2, r3 = connect(in_fc, out_fc, N=N, testing=True)
-"""

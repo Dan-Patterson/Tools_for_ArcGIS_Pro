@@ -1,19 +1,33 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   angles.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-12-21
-:Purpose:  tools for working with numpy arrays
-:Useage:
-:
-:References:
-: - https://en.wikipedia.org/wiki/Regular_polygon
-: sum of interior angles
-:   (n-2) * 180, where n is the number of sides
-:   n = 3  180 triangle
-:   n = 4  360 rectangle
-:   n = 5  540 pentagram
-:   n = 6  720 hexagram
+angles
+======
+
+Script:   angles.py
+
+Author:   Dan.Patterson@carleton.ca
+
+Modified: 2018-03-31
+
+Purpose:  tools for working with numpy arrays
+
+Useage:
+
+References:
+-----------
+[1] https://en.wikipedia.org/wiki/Regular_polygon
+
+Notes:
+------
+sum of interior angles   (n-2) * 180, where n is the number of sides
+
+n = 3  180 triangle
+
+n = 4  360 rectangle
+
+n = 5  540 pentagram
+
+n = 6  720 hexagram``
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
@@ -25,7 +39,6 @@ import arcpy
 
 ft = {'bool': lambda x: repr(x.astype('int32')),
       'float': '{: 0.3f}'.format}
-
 np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
@@ -33,20 +46,43 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 script = sys.argv[0]  # print this should you need to locate the script
 
 
-# ---- array functions -------------------------------------------------------
-#
+# ---- arcpytools functions --------------------------------------------------
+# ---- You can remove these and import `arcpytools` ----
+# ------------------------------------------------------
+def _describe(in_fc):
+    """Simply return the arcpy.da.Describe object
+
+    *desc.keys()* : an abbreviated list...
+    ::
+        'OIDFieldName'... 'areaFieldName', 'baseName'... 'catalogPath',
+        ... 'dataType'... 'extent', 'featureType', 'fields', 'file'... 'hasM',
+        'hasOID', 'hasZ', 'indexes'... 'lengthFieldName'... 'name', 'path',
+        'rasterFieldName', ..., 'shapeFieldName', 'shapeType',
+        'spatialReference',  ...
+    """
+    return arcpy.da.Describe(in_fc)
+
+
 def fc_info(in_fc, prn=False):
     """Return basic featureclass information, including...
-    :
-    : shp_fld  - field name which contains the geometry object
-    : oid_fld  - the object index/id field name
-    : SR       - spatial reference object (use SR.name to get the name)
-    : shp_type - shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
-    : - others: 'areaFieldName', 'baseName', 'catalogPath','featureType',
-    :   'fields', 'hasOID', 'hasM', 'hasZ', 'path'
-    : - all_flds =[i.name for i in desc['fields']]
+
+    Parameters
+    ----------
+    - ``shp_fld  :``
+        field name which contains the geometry object
+    - ``oid_fld  :``
+        the object index/id field name
+    - ``SR       :``
+        spatial reference object (use SR.name to get the name)
+    - ``shp_type :``
+        shape type (Point, Polyline, Polygon, Multipoint, Multipatch)
+    - ``others   :``
+        areaFieldName, baseName, catalogPath, featureType, fields,
+        hasOID, hasM, hasZ, path
+    - ``all_flds :``
+         [i.name for i in desc['fields']]
     """
-    desc = arcpy.da.Describe(in_fc)
+    desc = _describe(in_fc)
     args = ['shapeFieldName', 'OIDFieldName', 'shapeType', 'spatialReference']
     shp_fld, oid_fld, shp_type, SR = [desc[i] for i in args]
     if prn:
@@ -60,14 +96,17 @@ def fc_info(in_fc, prn=False):
 
 
 def tweet(msg):
-    """Print a message for both arcpy and python.
-    : msg - a text message
+    """Produce a message for both arcpy and python::
+
+    `msg` - a text message
     """
     m = "\n{}\n".format(msg)
     arcpy.AddMessage(m)
     print(m)
-    print(arcpy.GetMessages())
 
+
+# ---- end of `arcpytools` functions -----------------------------------------
+#
 
 def _geo_array(polys):
     """Convert polygon objects to arrays
@@ -145,8 +184,8 @@ def angles_poly(a, inside=True, in_deg=True):
     : b =np.asarray([(i.X, i.Y) if i is not None else ()
     :                for j in a for i in j])
     """
-    #a = a.getPart()
-    #a = np.asarray([[i.X, i.Y] for j in a for i in j])
+    # a = a.getPart()
+    # a = np.asarray([[i.X, i.Y] for j in a for i in j])
     if len(a) < 2:
         return None
     elif len(a) == 2:  # **** check
@@ -252,9 +291,9 @@ polys = _get_shapes(in_fc)
 arrs = _geo_array(polys)
 out = call_angles(arrs)
 # out = angles_poly(arrs, inside=True, in_deg=True)  # use for xy1000_tree only
-#a0 = np.array([[0., 0.], [0., 10.], [10., 10.], [10., 0.], [0., 0.]])
-#a1 = np.array([[20., 20.], [20., 30.], [30., 30.], [30., 20.], [20., 20.]])
-#p0, p1, p2 = polys
+# a0 = np.array([[0., 0.], [0., 10.], [10., 10.], [10., 0.], [0., 0.]])
+# a1 = np.array([[20., 20.], [20., 30.], [30., 30.], [30., 20.], [20., 20.]])
+# p0, p1, p2 = polys
 # b = _get_attributes(in_fc)
 
 # out_shps = arcpnts_poly(out, out_type=out_type, SR=SR)

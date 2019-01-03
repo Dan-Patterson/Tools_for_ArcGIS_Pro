@@ -1,17 +1,23 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   closetbl.py
-:Author:   Dan_Patterson@carleton.ca
-:Modified: 2017-04-11
-:
-:Purpose:  Determine the nearest points based on euclidean distance within
-:  a point file.  Emulates Generate Near Table in ArcMap
-:
-:References:
-:----------
-: - http://desktop.arcgis.com/en/arcmap/latest/tools/analysis-toolbox/
-:   generate-near-table.htm
-:
+closetbl
+========
+
+Script : closetbl.py
+
+Author : Dan_Patterson@carleton.ca
+
+Modified : 2018-03-31
+
+Purpose:
+    Determine the nearest points based on euclidean distance within a point
+    file.  Emulates Generate Near Table in ArcMap
+
+References:
+----------
+[1] http://desktop.arcgis.com/en/arcmap/latest/tools/analysis-toolbox/
+generate-near-table.htm
+
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
@@ -33,9 +39,9 @@ script = sys.argv[0]
 # ---- functions ----
 def e_dist(a, b, metric='euclidean'):
     """Distance calculation for 1D, 2D and 3D points using einsum
-    : a, b   - list, tuple, array in 1,2 or 3D form
-    : metric - euclidean ('e','eu'...), sqeuclidean ('s','sq'...),
-    :-----------------------------------------------------------------------
+
+    - ``a, b   :`` list, tuple, array in 1,2 or 3D form
+    - ``metric :`` euclidean ('e','eu'...), sqeuclidean ('s','sq'...),
     """
     a = np.asarray(a)
     b = np.atleast_2d(b)
@@ -67,10 +73,9 @@ def to_array(in_fc):
 
 def line_dir(orig, dest, fromNorth=False):
     """Direction of a line given 2 points
-    : orig, dest - two points representing the start and end of a line.
-    : fromNorth - True or False gives angle relative to x-axis)
-    :Notes:
-    :
+
+    - ``orig, dest :`` two points representing the start and end of a line.
+    - ``fromNorth  :`` True or False gives angle relative to x-axis)
     """
     orig = np.atleast_2d(orig)
     dest = np.atleast_2d(dest)
@@ -83,18 +88,25 @@ def line_dir(orig, dest, fromNorth=False):
 
 def near_tbl(a, b=None, N=1):
     """Return the coordinates and distance to the nearest N points within
-    :  an 2D numpy array, 'a', with optional ordering of the inputs.
-    :Requires:
-    :--------
-    : e_dist, fc_info, tweet from arcpytools
-    : a - shape coordinates extracted from a point array
-    : b - is b is None, then within file differences are used, otherwise
-    :     provide another set of coordinates to do between file distances
-    : N - the closest N distances and angles to calculate
-    :
-    :Returns:
-    :-------
-    :  A structured array containing Origin, Dest and Dist_FT
+    an 2D numpy array, `a`, with optional ordering of the inputs.
+
+    Parameters:
+    -----------
+
+    `e_dist`, `fc_info`, and `tweet` from arcpytools
+
+    -`a` : array
+        shape coordinates extracted from a point array
+    -`b` : array or None
+        if b is None, then within file differences are used, otherwise provide
+        another set of coordinates to do between file distances
+    -`N` : number
+        the closest N distances and angles to calculate
+
+    Returns:
+    -------
+
+    A structured array containing Origin, Dest and Dist_FT (from - to points)
     """
     # ---- Calculate the distance array ----
     offset = False
@@ -131,6 +143,19 @@ def near_tbl(a, b=None, N=1):
 
 
 # ---- Run the analysis ----
+#
+def tool():
+    """ run the tool"""
+    in_fc = sys.argv[1]
+    N = int(sys.argv[2])
+    out_tbl = sys.argv[3]
+    args = [script, in_fc, N, out_tbl]
+    tweet(frmt.format(*args))           # call tweet
+    a = to_array(in_fc)                 # call to_array
+    nt = near_tbl(a, b=None, N=N)       # call near_tbl
+    tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
+    arcpy.da.NumPyArrayToTable(nt, out_tbl)
+
 
 frmt = """\n
 :Running ... {}
@@ -138,16 +163,12 @@ frmt = """\n
 :Finding ... {} closest points
 :Producing.. {}\n
 """
-
-in_fc = sys.argv[1]
-N = int(sys.argv[2])
-out_tbl = sys.argv[3]
-args = [script, in_fc, N, out_tbl]
-tweet(frmt.format(*args))           # call tweet
-a = to_array(in_fc)                 # call to_array
-nt = near_tbl(a, b=None, N=N)       # call near_tbl
-tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
-arcpy.da.NumPyArrayToTable(nt, out_tbl)
+if len(sys.argv) == 1:
+    fn = r'C:\GIS\points\points.gdb\Fishnet_label'
+    a = arcpy.da.FeatureClassToNumPyArray(fn, 'Shape')
+    a = a['Shape']
+else:
+    tool()
 
 
 # ---------------------------------------------------------------------
@@ -155,9 +176,3 @@ if __name__ == "__main__":
     """Main section...   """
 
 #    print("Script... {}".format(script))
-
-"""
-fn = r'C:\GIS\points\points.gdb\Fishnet_label'
-a = arcpy.da.FeatureClassToNumPyArray(fn, 'Shape')
-a = a['Shape']
-"""

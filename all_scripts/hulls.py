@@ -1,33 +1,54 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   hulls.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-03-10
-:Purpose:  tools for working with numpy arrays
-:
-:References:
-: https://community.esri.com/blogs/dan_patterson/2018/03/11/
-:       concave-hulls-the-elusive-container
-: https://github.com/jsmolka/hull/blob/master/hull.py
-: https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
-:        line-segments-intersect#565282
-: http://www.codeproject.com/Tips/862988/Find-the-intersection-
-:       point-of-two-line-segments
+hulls.py
+========
+
+Script:   hulls.py
+
+Author:   Dan.Patterson@carleton.ca
+
+Modified: 2018-11-11
+
+Purpose:
+--------
+Determine convex and concave hulls for point data.  This is a part of the
+PointTools toolbox for use in ArcGIS Pro
+
+References:
+-----------
+concave/convex hulls
+
+`<https://tereshenkov.wordpress.com/2017/11/28/building-concave-hulls-alpha-
+shapes-with-pyqt-shapely-and-arcpy/>`_.
+
+`<https://repositorium.sdum.uminho.pt/handle/1822/6429?locale=en>`_.
+
+`<https://community.esri.com/blogs/dan_patterson/2018/03/11/
+concave-hulls-the-elusive-container>'_.
+
+`<https://github.com/jsmolka/hull/blob/master/hull.py>'_.
+
+`<https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
+line-segments-intersect#565282>'_.
+
+`<http://www.codeproject.com/Tips/862988/Find-the-intersection-
+point-of-two-line-segments>'_.
 :
 :---------------------------------------------------------------------:
 """
+# pylint: disable=C0103
+# pylint: disable=R1710
+# pylint: disable=R0914
+
 # ---- imports, formats, constants ----
 import sys
-import numpy as np
-from arcpytools import tweet, output_polylines, output_polygons
-import arcpy
 import warnings
+warnings.simplefilter('ignore', FutureWarning)
+import numpy as np
 import math
 
 
-warnings.simplefilter('ignore', FutureWarning)
 
-arcpy.overwriteOutput = True
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -49,17 +70,22 @@ def pnt_in_list(pnt, pnts_list):
 
 def intersects(*args):
     """Line intersection check.  Two lines or 4 points that form the lines.
-    :Requires:
-    :--------
-    :  intersects(line0, line1) or intersects(p0, p1, p2, p3)
-    :   p0, p1 -> line 1
-    :   p2, p3 -> line 2
-    :Returns: boolean, if the segments do intersect
-    :--------
-    :References:
-    :--------
-    : https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
-    :        line-segments-intersect#565282
+
+    Requires:
+    --------
+      intersects(line0, line1) or intersects(p0, p1, p2, p3)
+        p0, p1 -> line 1
+        p2, p3 -> line 2
+
+    Returns:
+    --------
+        boolean, if the segments do intersect
+
+    References:
+    -----------
+    `<https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
+    line-segments-intersect#565282>`_.
+
     """
     if len(args) == 2:
         p0, p1, p2, p3 = *args[0], *args[1]
@@ -132,34 +158,76 @@ def point_in_polygon(pnt, poly):  # pnt_in_poly(pnt, poly):  #
     return False
 
 
-def knn(pnts, p, k):
+#def knn(pnts, p, k):
+#    """
+#    Calculates k nearest neighbours for a given point.
+#
+#    points : array
+#        list of points
+#    p : two number array-like
+#        reference point
+#    k : integer
+#        amount of neighbours
+#    Returns:
+#    --------
+#    list of the k nearest neighbours, based on squared distance
+#    """
+#    s = sorted(pnts,
+#               key=lambda x: (x[0]-p[0])**2 + (x[1]-p[1])**2)[0:k]
+##    s = sorted(pnts,
+##               key=lambda x: math.sqrt((x[0]-p[0])**2 + (x[1]-p[1])**2))[0:k]
+#    return s
+
+
+def knn0(pnts, p, k):
     """
     Calculates k nearest neighbours for a given point.
 
-    :param points: list of points
-    :param p: reference point
-    :param k: amount of neighbours
-    :return: list
+    points : array
+        list of points
+    p : two number array-like
+        reference point
+    k : integer
+        amount of neighbours
+    Returns:
+    --------
+    list of the k nearest neighbours, based on squared distance
     """
-    s = sorted(pnts,
-               key=lambda x: math.sqrt((x[0]-p[0])**2 + (x[1]-p[1])**2))[0:k]
-    return s
+    p = np.asarray(p)
+    pnts = np.asarray(pnts)
+    diff = pnts - p[np.newaxis, :]
+    d = np.einsum('ij,ij->i', diff, diff)
+    idx = np.argsort(d)[:k]
+#    s = [i.tolist() for i in pnts[idx]]
+    return pnts[idx].tolist()
 
 
 def concave(points, k):
     """Calculates the concave hull for given points
-    :Requires:
-    :--------
-    : points - initially the input set of points with duplicates removes and
-    :    sorted on the Y value first, lowest Y at the top (?)
-    : k - initially the number of points to start forming the concave hull,
-    :    k will be the initial set of neighbors
-    :Notes:  This recursively calls itself to check concave hull
-    : p_set - The working copy of the input points
-    :-----
+
+    Requires:
+    --------
+    points : array-like
+        initially the input set of points with duplicates removes and
+        sorted on the Y value first, lowest Y at the top (?)
+    k : integer
+        initially the number of points to start forming the concave hull,
+        k will be the initial set of neighbors
+
+    Notes:
+    ------
+    This recursively calls itself to check concave hull.
+
+    p_set : The working copy of the input points
     """
     k = max(k, 3)  # Make sure k >= 3
-    p_set = list(set(points[:]))  # Remove duplicates if not done already
+    if isinstance(points, np.ndarray):  # Remove duplicates if not done already
+        p_set = np.unique(points, axis=0).tolist()
+    else:
+        pts = []
+        p_set = [pts.append(i) for i in points if i not in pts] # Remove duplicates
+        p_set = np.array(p_set)
+        del pts
     if len(p_set) < 3:
         raise Exception("p_set length cannot be smaller than 3")
     elif len(p_set) == 3:
@@ -167,16 +235,15 @@ def concave(points, k):
     k = min(k, len(p_set) - 1)  # Make sure k neighbours can be found
 
     frst_p = cur_p = min(p_set, key=lambda x: x[1])
-    hull = [frst_p]  # Initialize hull with first point
+    hull = [frst_p]       # Initialize hull with first point
     p_set.remove(frst_p)  # Remove first point from p_set
     prev_ang = 0
 
     while (cur_p != frst_p or len(hull) == 1) and len(p_set) > 0:
         if len(hull) == 3:
-            p_set.append(frst_p)  # Add first point again
-        knn_pnts = knn(p_set, cur_p, k)  # Find nearest neighbours
+            p_set.append(frst_p)         # Add first point again
+        knn_pnts = knn0(p_set, cur_p, k)  # Find nearest neighbours
         cur_pnts = sorted(knn_pnts, key=lambda x: -angle(x, cur_p, prev_ang))
-
         its = True
         i = -1
         while its and i < len(cur_pnts) - 1:
@@ -193,11 +260,11 @@ def concave(points, k):
         cur_p = cur_pnts[i]
         hull.append(cur_p)  # Valid candidate was found
         p_set.remove(cur_p)
-
     for point in p_set:
         if not point_in_polygon(point, hull):
             return concave(points, k + 1)
     #
+    hull = np.array(hull)
     return hull
 
 
@@ -217,7 +284,12 @@ def convex(points):
     """Calculates the convex hull for given points
     :Input is a list of 2D points [(x, y), ...]
     """
-    points = sorted(set(points))  # Remove duplicates
+    if isinstance(points, np.ndarray):
+        points = np.unique(points, axis=0)
+    else:
+        pts = []
+        points = [pts.append(i) for i in points if i not in pts] # Remove duplicates
+        del pts
     if len(points) <= 1:
         return points
     # Build lower hull
@@ -232,95 +304,77 @@ def convex(points):
         while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
             upper.pop()
         upper.append(p)
-    print("lower\n{}\nupper\n{}".format(lower, upper))
+    #print("lower\n{}\nupper\n{}".format(lower, upper))
     return np.array(lower[:-1] + upper)  # upper[:-1]) # for open loop
+
 
 
 # ----------------------------------------------------------------------
 # .... running script or testing code section
-def _tool():
-    """run when script is from a tool
+
+def ice():
+    """Ice demo for concave hull generation"""
+#    pth = r"C:\GIS\A_Tools_scripts\Polygon_lineTools\Data\pointset.csv"
+    pth = r"C:\GIS\A_Tools_scripts\Polygon_lineTools\Data\samplepoints3.csv"
+    a = np.loadtxt(pth, delimiter=",", skiprows=1)
+    return a
+
+
+def c_():
+    """Letter c for concave hull determination
     """
-    in_fc = sys.argv[1]
-    group_by = str(sys.argv[2])
-    k_factor = int(sys.argv[3])
-    hull_type = str(sys.argv[4])
-    out_type = str(sys.argv[5])
-    out_fc = sys.argv[6]
-    return in_fc, group_by, k_factor, hull_type, out_type, out_fc
+    c = np.array([[0, 0], [0, 100], [100, 100], [100, 80], [20, 80],
+                  [20, 20], [100, 20], [100, 0], [0, 0]])
+    return c
 
 
-gdb_pth = "/".join(script.split("/")[:-2]) + "/Data/Point_tools.gdb"
+def _demo():
+    """Demo data
+    """
+    hull_type = 'concave'
+    k_factor = 3 # 3 to 11
+    # (1) ---- get the points
+    #a = np.array([[0, 0], [0, 10], [10, 0], [0,0]])
 
-if len(sys.argv) == 1:
-    testing = True
-    in_fc = gdb_pth + r"/r_sorted"
-    group_by = 'Group_'
-    k_factor = 3
-    hull_type = 'concave'  # 'convex'
-    out_type = 'Polyline'
-    out_fc = gdb_pth + r"/r_11"
-else:
-    testing = False
-    in_fc, group_by, k_factor, hull_type, out_type, out_fc = _tool()
-
-msg = """\n
------------------------------------------------------------------------
----- Concave/convex hull ----
-script    {}
-Testing   {}
-in_fc     {}
-group_by  {}
-k_factor  {}
-hull_type {}
-out_type  {}
-out_fc    {}
------------------------------------------------------------------------
-
-"""
-args = [script, testing, in_fc, group_by, k_factor,
-        hull_type, out_type, out_fc]
-tweet(msg.format(*args))
-
-desc = arcpy.da.Describe(in_fc)
-SR = desc['spatialReference']
-#
-# (1) ---- get the points
-out_flds = ['OID@', 'SHAPE@X', 'SHAPE@Y'] + [group_by]
-a = arcpy.da.FeatureClassToNumPyArray(in_fc, out_flds, "", SR, True)
-#
-# (2) ---- determine the unique groupings of the points
-uniq, idx, rev = np.unique(a[group_by], True, True)
-groups = [a[np.where(a[group_by] == i)[0]] for i in uniq]
-#
-# (3) ---- for each group, perform the concave hull
-hulls = []
-for i in range(0, len(groups)):
-    p = groups[i]
-    n = len(p)
-    p = p[['SHAPE@X', 'SHAPE@Y']]
-    p = p.view(np.float64).reshape(n, 2)
-    #
-    # ---- point preparation section ------------------------------------
-    p = np.array(list(set([tuple(i) for i in p])))  # Remove duplicates
-    idx_cr = np.lexsort((p[:, 0], p[:, 1]))         # indices of sorted array
-    in_pnts = np.asarray([p[i] for i in idx_cr])    # p[idx_cr]  #
-    in_pnts = in_pnts.tolist()
-    in_pnts = [tuple(i) for i in in_pnts]
-    if hull_type == 'concave':
-        cx = np.array(concave(in_pnts, k_factor))  # requires a list of tuples
-    else:
-        cx = np.array(convex(in_pnts))
-    hulls.append(cx.tolist())
-    # ----
-    #
-if out_type == 'Polyline':
-    output_polylines(out_fc, SR, [hulls])
-elif out_type == 'Polygon':
-    output_polygons(out_fc, SR, [hulls])
-else:
-    for i in hulls:
-        print("Hulls\n{}".format(np.array(i)))
+    a = np.array([[0, 1, 1, 0, 1, 1, 1, 0, 0, 0],
+                  [0, 0, 1, 1, 0, 1, 1, 0, 0, 0],
+                  [1, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+                  [0, 0, 0, 0, 0, 1, 1, 1, 1, 1],
+                  [1, 0, 0, 1, 1, 0, 0, 1, 0, 0],
+                  [0, 1, 1, 0, 0, 0, 1, 1, 1, 0],
+                  [0, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+                  [1, 1, 0, 1, 1, 1, 0, 1, 0, 0],
+                  [0, 1, 1, 1, 1, 0, 1, 1, 0, 1],
+                  [1, 0, 1, 0, 0, 1, 0, 1, 1, 0]])
+    xs, ys = np.where(a == 1)
+    cell_size = 10
+    xy = np.array(list(zip(xs*cell_size, ys*cell_size)))
+    # (2) ---- for each group, perform the concave hull
+    in_arrays = [a]
+    groups = [xy] #[a[np.where(a[group_by] == i)[0]] for i in uniq]
+    hulls = []
+    out_arrs = []
+    cnt = 0
+    for p in groups:
+        # ---- point preparation section ------------------------------------
+        p = np.array(list(set([tuple(i) for i in p])))  # Remove duplicates
+        idx_cr = np.lexsort((p[:, 0], p[:, 1]))         # indices of sorted array
+        in_pnts = np.asarray([p[i] for i in idx_cr])    # p[idx_cr]  #
+        in_pnts = in_pnts.tolist()
+        in_pnts = [tuple(i) for i in in_pnts]
+        if hull_type == 'concave':
+            cx = np.array(concave(in_pnts, k_factor))  # requires a list of tuples
+        else:
+            cx = np.array(convex(in_pnts))
+        hulls.append(cx)
+        z = np.zeros_like(in_arrays[cnt])
+        cnt += 1
+        for i in cx:
+            x = int(i[0]//cell_size)
+            y = int(i[1]//cell_size)
+            z[x, y] = 1
+        out_arrs.append(z)
+    return a, xy, hulls, out_arrs
 # ----------------------------------------------------------------------
 # __main__ .... code section
 if __name__ == "__main__":

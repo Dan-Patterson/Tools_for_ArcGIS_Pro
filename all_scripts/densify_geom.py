@@ -1,11 +1,20 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   densify_geom.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-01-16
-:Purpose:  Densify geometry by a factor.
-:Notes:
-:  Uses functions from 'arraytools'.  These have been consolidated here.
+densify_geom
+============
+
+Script : densify_geom.py
+
+Author : Dan.Patterson@carleton.ca
+
+Modified : 2018-03-31
+
+Purpose : Densify geometry by a factor.
+
+Notes:
+------
+
+Uses functions from 'arraytools'.  These have been consolidated here.
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
@@ -26,8 +35,9 @@ script = sys.argv[0]  # print this should you need to locate the script
 #
 def _flat_(a_list, flat_list=None):
     """Change the isinstance as appropriate
-    :  Flatten an object using recursion
-    :  see: itertools.chain() for an alternate method of flattening.
+
+    Flatten an object using recursion
+    see: itertools.chain() for an alternate method of flattening.
     """
     if flat_list is None:
         flat_list = []
@@ -126,13 +136,17 @@ def _get_shapes(in_fc):
 
 def _ndarray(in_fc, to_pnts=True, flds=None, SR=None):
     """Convert featureclass geometry (in_fc) to a structured ndarray including
-    :  options to select fields and specify a spatial reference.
-    :
-    :Requires:
-    :--------
-    : in_fc - input featureclass
-    : to_pnts - True, convert the shape to points. False, centroid returned.
-    : flds - '*' for all, others: 'Shape',  ['SHAPE@X', 'SHAPE@Y'], or specify
+    options to select fields and specify a spatial reference.
+
+    Parameters:
+    -----------
+    - in_fc :
+        input featureclass
+    - to_pnts : boolean
+        True, convert the shape to points.
+        False, centroid returned.
+    - flds : `*` for all.
+        Others can include: 'Shape',  ['SHAPE@X', 'SHAPE@Y'], or specify
     """
     if flds is None:
         flds = "*"
@@ -148,7 +162,7 @@ def _ndarray(in_fc, to_pnts=True, flds=None, SR=None):
 
 def _get_attributes(in_fc):
     """Get the attributes of features, returns the centroid coordinates
-    :  as fields in the table.
+    as fields in the table.
     """
     dt_b = [('IDs', '<i4'), ('Xc', '<f8'), ('Yc', '<f8')]
     b = _ndarray(in_fc, to_pnts=False)
@@ -187,8 +201,8 @@ def obj_shapes(in_, SR):
 
 def arcpnts_poly(in_, out_type='Polygon', SR=None):
     """Convert arcpy Point lists to poly* features
-    : out_type - either 'Polygon' or 'Polyline'
-    :
+
+    - out_type : either 'Polygon' or 'Polyline'
     """
     s = []
     for i in in_:
@@ -249,11 +263,9 @@ def densify(polys, fact=2, sp_ref=None):
 
 def _demo():
     """run when script is in demo mode"""
-    pth = script.replace('densify_geom.py', '')
-    in_fc = pth + '/geom_data.gdb/polygon_demo'
-#    in_fc = r"C:\Git_Dan\a_Data\testdata.gdb\Carp_5x5"   # full 25 polygons
-#    in_fc = r"C:\Git_Dan\a_Data\arcpytools_demo.gdb\xy1000_tree"
-    out_fc = pth + '/geom_data.gdb/x1'
+    in_fc = 'C:\\all_scripts\\testfiles\\testdata.gdb\Carp_5x5km'
+#    out_fc = pth + '/geom_data.gdb/x1'
+    out_fc = None
     fact = 2
     out_type = 'Polygon'  # 'Polyline' or 'Points'
     testing = True
@@ -287,21 +299,22 @@ else:
 
 shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
 
-temp = out_fc + "tmp"
-if arcpy.Exists(temp):
-    arcpy.Delete_management(temp)
-arcpy.MultipartToSinglepart_management(in_fc, temp)
-polys = _get_shapes(temp)
-a = densify(polys, fact=fact, sp_ref=SR)
-b = _get_attributes(temp)
-out_shps = arcpnts_poly(a, out_type=out_type, SR=SR)
 if not testing:
+    temp = out_fc + "tmp"
+    if arcpy.Exists(temp):
+        arcpy.Delete_management(temp)
+    arcpy.MultipartToSinglepart_management(in_fc, temp)
+    polys = _get_shapes(temp)
+    a = densify(polys, fact=fact, sp_ref=SR)
+    b = _get_attributes(temp)
+    out_shps = arcpnts_poly(a, out_type=out_type, SR=SR)
+    #
     if arcpy.Exists(out_fc):
         arcpy.Delete_management(out_fc)
     arcpy.CopyFeatures_management(out_shps, out_fc)
     arcpy.da.ExtendTable(out_fc, 'OBJECTID', b, 'IDs')
-# ---- cleanup
-arcpy.Delete_management(temp)
+    # ---- cleanup
+    arcpy.Delete_management(temp)
 
 
 # ----------------------------------------------------------------------
