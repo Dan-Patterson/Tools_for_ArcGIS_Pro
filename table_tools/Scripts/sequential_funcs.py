@@ -7,7 +7,7 @@ Script:   sequential_funcs.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-06-04
+Modified: 2018-12-28
 
 Purpose :
     Calculating sequential values for fields in geodatabase tables
@@ -49,20 +49,6 @@ def has_nulls(a):
     return m
 
 
-def has_nulls(a):
-    """Check to see if nulls are in the array passed from the featureclass
-    """
-    #
-    a_kind = a.dtype.kind
-    if a_kind == 'i':
-        m = a == np.iinfo(np.int32).min
-    elif a_kind == 'f':
-        m = np.isnan(a)
-    else:
-        m = a == None
-    return m
-
-
 def tbl_2_nparray(in_tbl, flds):
     """Form the TableToNumPyArray to account for nulls for various dtypes.
     This is essentially a shortcut to `arcpy.da.TableToNumPyArray`
@@ -84,6 +70,7 @@ def tbl_2_nparray(in_tbl, flds):
     arraytools, apt.py module
     """
     nulls = {'Double':np.nan,
+             'Single':np.nan,
              'Integer':np.iinfo(np.int32).min,
              'OID':np.iinfo(np.int32).min,
              'String':"None"}
@@ -316,7 +303,7 @@ elif func == 'sequential diff':
     result = seq_diff(a)  # sequential diff call
     idx = 1
 elif func == 'sequential number':
-    result = 'seq_number'
+    result = seq_number(a)
     idx = 0
 elif func == 'z_score':
     result = z_score(a)
@@ -349,3 +336,4 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
+#    tbl = r"C:\Git_Dan\arraytools\array_tools_testing\Data\pnts_2000.npy"
