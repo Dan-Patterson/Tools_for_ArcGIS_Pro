@@ -62,11 +62,14 @@ def to_array(in_fc):
     """Extract the shapes and produce a coordinate array.
     """
     shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
-    in_flds = [oid_fld] + ['SHAPE@X', 'SHAPE@Y']
+    key_flds = ['SHAPE@X', 'SHAPE@Y']
+    in_flds = [oid_fld] + key_flds
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, in_flds)
-    a = a[['SHAPE@X', 'SHAPE@Y']]
-    a = a.view(np.float64).reshape(a.shape[0], 2)
-    return a
+    uni, idx = np.unique(a[key_flds], True)
+    uni_pnts = a[idx]
+    #a = a[['SHAPE@X', 'SHAPE@Y']]
+    a = uni.view(np.float64).reshape(uni.shape[0], 2)
+    return a, uni_pnts, idx
 
 
 def line_dir(orig, dest, fromNorth=False):
@@ -142,33 +145,101 @@ frmt = """\n
 :Producing.. {}\n
 """
 
+def nn_kdtree(a, N=1, sorted_=True, to_tbl=True, as_cKD=True):
+    """Produce the N closest neighbours array with their distances using
+    scipy.spatial.KDTree as an alternative to einsum.
 
-# ---- Run the analysis ----
-def _tool():
-    """Run the analysis from the tool
+    Parameters:
+    -----------
+    a : array
+        Assumed to be an array of point objects for which `nearest` is needed.
+    N : integer
+        Number of neighbors to return.  Note: the point counts as 1, so N=3
+        returns the closest 2 points, plus itself.
+        For table output, max N is limited to 5 so that the tabular output
+        isn't ridiculous.
+    sorted_ : boolean
+        A nice option to facilitate things.  See `xy_sort`.  Its mini-version
+        is included in this function.
+    to_tbl : boolean
+        Produce a structured array output of coordinate pairs and distances.
+    as_cKD : boolean
+        Whether to use the `c` compiled or pure python version
+
+    References:
+    -----------
+    `<https://stackoverflow.com/questions/52366421/how-to-do-n-d-distance-
+    and-nearest-neighbor-calculations-on-numpy-arrays/52366706#52366706>`_.
+
+    `<https://stackoverflow.com/questions/6931209/difference-between-scipy-
+    spatial-kdtree-and-scipy-spatial-ckdtree/6931317#6931317>`_.
     """
+    def _xy_sort_(a):
+        """mini xy_sort"""
+        a_view = a.view(a.dtype.descr * a.shape[1])
+        idx = np.argsort(a_view, axis=0, order=(a_view.dtype.names)).ravel()
+        a = np.ascontiguousarray(a[idx])
+        return a, idx
+    #
+    def xy_dist_headers(N):
+        """Construct headers for the optional table output"""
+        vals = np.repeat(np.arange(N), 2)
+        names = ['X_{}', 'Y_{}']*N + ['d_{}']*(N-1)
+        vals = (np.repeat(np.arange(N), 2)).tolist() + [i for i in range(1, N)]
+        n = [names[i].format(vals[i]) for i in range(len(vals))]
+        f = ['<f8']*N*2 + ['<f8']*(N-1)
+        return list(zip(n, f))
+    #
+    from scipy.spatial import cKDTree, KDTree
+    #
+    if sorted_:
+        a, idx_srt = _xy_sort_(a)
+    # ---- query the tree for the N nearest neighbors and their distance
+    if as_cKD:
+        t = cKDTree(a)
+    else:
+        t = KDTree(a)
+    dists, indices = t.query(a, N+1)  # so that point isn't duplicated
+    dists = dists[:,1:]               # and the array is 2D
+    frumXY = a[indices[:,0]]
+    indices = indices[:,1:]
+    if to_tbl and (N <= 5):
+        dt = xy_dist_headers(N+1)  # --- Format a structured array header
+        xys =  a[indices]
+        new_shp = (xys.shape[0], np.prod(xys.shape[1:]))
+        xys = xys.reshape(new_shp)
+        #ds = dists[:, 1]  # [d[1:] for d in dists]
+        arr = np.concatenate((frumXY, xys, dists), axis=1)
+        z = np.zeros((xys.shape[0],), dtype=dt)
+        names = z.dtype.names
+        for i, j in enumerate(names):
+            z[j] = arr[:, i]
+        return z
+    dists = dists.view(np.float64).reshape(dists.shape[0], -1)
+    return dists
+
+
+def _tool():
+    """ run the tool"""
     in_fc = sys.argv[1]
-    in_fc2 = sys.argv[2]
-    N = int(sys.argv[3])
-    out_tbl = sys.argv[4]
-    args = [script, in_fc, in_fc2, N, out_tbl]
+    N = int(sys.argv[2])
+    out_tbl = sys.argv[3]
+    args = [script, in_fc, N, out_tbl]
     tweet(frmt.format(*args))           # call tweet
     a = to_array(in_fc)                 # call to_array
-    if in_fc2 not in ("#", "", None):
-        b = to_array(in_fc2)
-        nt = near_tbl(a, b=b, N=N)        # call near_tbl
-    else:
-        nt = near_tbl(a, N=N)
-    tweet("\nnear table\n{}".format(nt.reshape(nt.shape[0], 1)))
+#    nt = near_tbl(a, b=None, N=N)       # call near_tbl
+    nt = nn_kdtree(a, N=3, sorted_=True, to_tbl=True, as_cKD=True)
+    tweet("\nnear table\n{}".format(nt)) #.reshape(nt.shape[0], 1)))
     arcpy.da.NumPyArrayToTable(nt, out_tbl)
-
 
 if len(sys.argv) == 1:
     in_fc = r'C:\GIS\A_Tools_scripts\PointTools\Point_tools.gdb\pnts_01'
-    a = arcpy.da.FeatureClassToNumPyArray(in_fc,
+    in_fc = r'C:\GIS\A_Tools_scripts\Ice\icebergs.gdb\x_0'
+    out_tbl = r'C:\GIS\A_Tools_scripts\Ice\icebergs.gdb\x_0_kd'
+    a0 = arcpy.da.FeatureClassToNumPyArray(in_fc,
                                           ['OID@', 'SHAPE@X', 'SHAPE@Y'])
-    a = to_array(in_fc)
-    # a = a[:10]
+    a, uni_pnts, idx = to_array(in_fc)
+    ret = nn_kdtree(a, N=3, sorted_=True, to_tbl=True, as_cKD=True)
 else:
     _tool()
 
@@ -179,7 +250,7 @@ if __name__ == "__main__":
 #    print("Script... {}".format(script))
 
 """
-fn = r'C:\GIS\points\points.gdb\Fishnet_label'
+fn = r'C:\GIS\A_Tools_scripts\PointTools\Point_tools.gdb\pnts_25'
 a = arcpy.da.FeatureClassToNumPyArray(fn, 'Shape')
 a = a['Shape']
 """
