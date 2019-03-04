@@ -7,7 +7,7 @@ Script :   triangulate.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-09-30
+Modified : 2019-02-07
 
 Purpose:  triangulate poly* features using scipy/qhull functions.
 
@@ -35,8 +35,8 @@ dict_keys(['_qhull', 'vertices', 'ridge_points', 'ridge_vertices', 'regions',
 >>> tri.min_bound, tri.max_bound
 (array([-4217.93, -3832.13]), array([5268.65, 5495.64]))
 
-Extras :
-------
+Notes
+-----
 To get the centroid geometry, you can do the following.
 
 >>> v = vor_pnts(aa, testing=False)
@@ -64,7 +64,7 @@ import sys
 import numpy as np
 from scipy.spatial import Delaunay, Voronoi
 #
-from arcpy import Exists
+from arcpy import Exists, AddMessage
 from arcpy.management import (Delete, CopyFeatures, MakeFeatureLayer)
 from arcpy.analysis import Clip
 from arcpy.da import Describe, FeatureClassToNumPyArray
@@ -84,6 +84,16 @@ env.overwriteOutput = True
 
 # ----
 #
+def tweet(msg):
+    """Print a message for both arcpy and python.
+
+    msg - a text message
+    """
+    m = "\n{}\n".format(msg)
+    AddMessage(m)
+    print(m)
+
+
 def circle(radius=1.0, theta=10.0, xc=0.0, yc=0.0):
     """Produce a circle/ellipse depending on parameters.
 
@@ -130,6 +140,7 @@ def poly(pnt_groups, SR):
             polygons.append(pl)
     return polygons
 
+
 def vor_pnts(pnts, testing=False):
     """Return the point indices"""
     out = []
@@ -171,6 +182,7 @@ def tri_pnts(pnts, testing=False):
     if testing:
         print("{}".format(new_pnts))
     out.append(new_pnts)
+    out = np.array(out).squeeze()
     return out
 
 
@@ -190,7 +202,7 @@ def _tri_demo(tri_type='Delaunay'):
     a = np.vstack((aa, c))
     d = v = None  # initialize the output to None
     if tri_type == 'Delaunay':
-        d = Delaunay(a)
+        d = Delaunay(aa)
         plot = delaunay_plot_2d(d)
         x0, y0 = [0., 0.]
         x1, y1 = [1000., 1000.]
@@ -229,14 +241,19 @@ def _tri_tool():
     a[:, 1] = z['SHAPE@Y']
     #
     if tri_type == 'Delaunay':
+        tweet("Delaunay... clip extent {}".format(xtent))
         t = tri_pnts(a, True)  # must be a list of list of points
         polys = poly(t, SR)
         if Exists(out_fc):
             Delete(out_fc)
         CopyFeatures(polys, "in_memory/temp")
         MakeFeatureLayer("in_memory/temp", "temp")
-        CopyFeatures("temp", out_fc)
+        if xtent not in ("", None):
+            Clip("temp", xtent, out_fc, None)
+        else:
+            CopyFeatures("temp", out_fc)
     else:
+        tweet("Voronoi... clip extent {}".format(xtent))
         c = infinity_circle(a, fac=10)
         aa = np.vstack((a, c))
         v = vor_pnts(aa, testing=False)
@@ -245,7 +262,7 @@ def _tri_tool():
             Delete(out_fc)
         CopyFeatures(polys, "in_memory/temp")
         MakeFeatureLayer("in_memory/temp", "temp")
-        if xtent is not None:
+        if xtent not in ("", None, ):
             Clip("temp", xtent, out_fc, None)
         else:
             CopyFeatures("temp", out_fc)
@@ -255,7 +272,7 @@ def _tri_tool():
 # uncomment the t = _tri... line below to graph
 if len(sys.argv) == 1:
     testing = True
-    a, t = _tri_demo('Voronoi')  # 'Delaunay' 'Voronoi'
+    a, t = _tri_demo('Delaunay')  # 'Delaunay' 'Voronoi'
 else:
     testing = False
     _tri_tool()
