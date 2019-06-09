@@ -7,7 +7,7 @@ Script:   hulls.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-11-11
+Modified: 2019-06-08
 
 Purpose:  working with numpy arrays to determine convex and concave hulls
 
@@ -25,6 +25,7 @@ point-of-two-line-segments>'_.
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured as stu
 from arcpytools_pnt import tweet, output_polylines, output_polygons
 import arcpy
 import warnings
@@ -326,9 +327,9 @@ groups = [a[np.where(a[group_by] == i)[0]] for i in uniq]
 hulls = []
 for i in range(0, len(groups)):
     p = groups[i]
-    n = len(p)
     p = p[['SHAPE@X', 'SHAPE@Y']]
-    p = p.view(np.float64).reshape(n, 2)
+    n = len(p)
+    p = stu(p)
     #
     # ---- point preparation section ------------------------------------
     p = np.array(list(set([tuple(i) for i in p])))  # Remove duplicates
