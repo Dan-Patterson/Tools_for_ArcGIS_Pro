@@ -1,25 +1,32 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   hulls.py
-:Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-03-10
-:Purpose:  tools for working with numpy arrays
-:
-:References:
-: https://community.esri.com/blogs/dan_patterson/2018/03/11/
-:       concave-hulls-the-elusive-container
-: https://github.com/jsmolka/hull/blob/master/hull.py
-: https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
-:        line-segments-intersect#565282
-: http://www.codeproject.com/Tips/862988/Find-the-intersection-
-:       point-of-two-line-segments
-:
+hulls.py
+========
+
+Script:   hulls.py
+
+Author:   Dan.Patterson@carleton.ca
+
+Modified: 2019-06-08
+
+Purpose:  working with numpy arrays to determine convex and concave hulls
+
+References:
+-----------
+`<https://community.esri.com/blogs/dan_patterson/2018/03/11/
+concave-hulls-the-elusive-container>'_.
+`<https://github.com/jsmolka/hull/blob/master/hull.py>'_.
+`<https://stackoverflow.com/questions/563198/how-do-you-detect-where-two-
+line-segments-intersect#565282>'_.
+`<http://www.codeproject.com/Tips/862988/Find-the-intersection-
+point-of-two-line-segments>'_.
 :---------------------------------------------------------------------:
 """
 # ---- imports, formats, constants ----
 import sys
 import numpy as np
-from arcpytools_ch import tweet, output_polylines, output_polygons
+from numpy.lib.recfunctions import structured_to_unstructured as stu
+from arcpytools_pnt import tweet, output_polylines, output_polygons
 import arcpy
 import warnings
 import math
@@ -146,6 +153,29 @@ def knn(pnts, p, k):
     return s
 
 
+def knn0(pnts, p, k):
+    """
+    Calculates k nearest neighbours for a given point.
+
+    points : array
+        list of points
+    p : two number array-like
+        reference point
+    k : integer
+        amount of neighbours
+    Returns:
+    --------
+    list of the k nearest neighbours, based on squared distance
+    """
+    p = np.asarray(p)
+    pnts = np.asarray(pnts)
+    diff = pnts - p[np.newaxis, :]
+    d = np.einsum('ij,ij->i', diff, diff)
+    idx = np.argsort(d)[:k]
+#    s = [i.tolist() for i in pnts[idx]]
+    return pnts[idx].tolist()
+
+
 def concave(points, k):
     """Calculates the concave hull for given points
     :Requires:
@@ -174,7 +204,7 @@ def concave(points, k):
     while (cur_p != frst_p or len(hull) == 1) and len(p_set) > 0:
         if len(hull) == 3:
             p_set.append(frst_p)  # Add first point again
-        knn_pnts = knn(p_set, cur_p, k)  # Find nearest neighbours
+        knn_pnts = knn(p_set, cur_p, k)  # knn or knn0
         cur_pnts = sorted(knn_pnts, key=lambda x: -angle(x, cur_p, prev_ang))
 
         its = True
@@ -297,9 +327,9 @@ groups = [a[np.where(a[group_by] == i)[0]] for i in uniq]
 hulls = []
 for i in range(0, len(groups)):
     p = groups[i]
-    n = len(p)
     p = p[['SHAPE@X', 'SHAPE@Y']]
-    p = p.view(np.float64).reshape(n, 2)
+    n = len(p)
+    p = stu(p)
     #
     # ---- point preparation section ------------------------------------
     p = np.array(list(set([tuple(i) for i in p])))  # Remove duplicates
