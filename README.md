@@ -2,6 +2,11 @@
 ## __***Tools for ArcGIS Pro***__
 
 
+### **Frequency and Statistics**
+
+This toolbox provides frequency counts for combinations of tabular data... a combination of the classes in two or more fields.
+An option ability to determine basic statistics for another numeric field based on the new classes.
+
 ### **Python Code Samples**
 
 A repository for Python Code Samples, largely associated with ArcGIS software but some standalone applications.
