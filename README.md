@@ -1,5 +1,5 @@
 
-## __***Tools for ArcGIS Pro***__
+## __**Tools for ArcGIS Pro**__
 
 
 ### **Frequency and Statistics**
