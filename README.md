@@ -5,6 +5,10 @@
 
 Contains an implementation for concave hull determination based on k-nearest neighbors (included there).  Also an implementation of convex hulls in case you want to compare differences between the hulls.
 
+### Feature Extent to Poly\* Features
+
+Produce axis-aligned extent rectangles from polygon/poline features.
+
 ### **Frequency and Statistics**
 
 This toolbox provides frequency counts for combinations of tabular data... a combination of the classes in two or more fields.
