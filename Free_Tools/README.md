@@ -14,17 +14,20 @@ The toolbox and scripts allow one to determine:
 **Feature Envelope to Polygon**
 
 Using the Geo array class, the extent of polyline and polygon features are created from their constituent points.
-    https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-envelope-to-polygon.htm>
+    https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-envelope-to-polygon.htm
 
 **Convex hulls**
 
+Simple convex hull implementation in python, or scipy (feature points > than a threshold)
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/minimum-bounding-geometry.htm
 
 **Feature to Point**
 
+For polygon features.  Reduces the points to a representative centroid.
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-to-point.htm
 
 **Split Line at Vertices**
+
 
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/split-line-at-vertices.htm
 
