@@ -910,10 +910,8 @@ class Geo(np.ndarray):
         A Nx4 array is returned representing X_from, Y_from, X_to, Y_to.
         """
         shps = self.bits
-        v = np.vstack(shps)
-        h = np.hstack((v[:-1], v[1:]))
-        idx = ~np.any(np.isnan(h), axis=1)  # ---- not needed, moved to bits
-        return h[idx]
+        h = [np.hstack((s[:-1], s[1:])) for s in shps]
+        return np.vstack(h)
 
     def common_segments(self):
         """Return the common segments in poly features.  Result is an array of
