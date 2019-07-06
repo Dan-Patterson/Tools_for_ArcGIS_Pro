@@ -12,7 +12,7 @@ from .fc_geo_io import (
         prn_tbl, prn_geo
         )
 from .npGeo import (
-        Geo, arrays_to_Geo, Geo_to_arrays, updateGeo, _angles_,
+        Geo, Arrays_to_Geo, Geo_to_arrays, Update_Geo, _angles_,
         _area_centroid_, _area_part_, _ch_, _o_ring_, _pnts_on_line_,
         _poly_segments_, _polys_to_unique_pnts_, _simplify_lines_
         )

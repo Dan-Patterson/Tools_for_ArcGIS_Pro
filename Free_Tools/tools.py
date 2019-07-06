@@ -243,7 +243,8 @@ def split_at_vertices(in_fc, out_fc):
     SR = getSR(in_fc)
     a, IFT, IFT_2 = fc_geometry(in_fc, SR)
     ag = Geo(a, IFT)
-    fr_to = ag.unique_segments()  # geo method
+#    fr_to = ag.unique_segments()  # geo method
+    fr_to = ag.polys_to_segments()
     dt = np.dtype([('X_orig', 'f8'), ('Y_orig', 'f8'),
                    ('X_dest', 'f8'), ('Y_dest', 'f8')])
     od = uts(fr_to, dtype=dt)  # ---- unstructured to structured
@@ -360,7 +361,13 @@ def _testing_():
     tool = '9'
     kind = 0
     msg = frmt.format(script, in_fc, out_fc, tool, kind)
-    tweet(msg)
+    result = check_path(out_fc)  # check the path
+    if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
+        tweet("Tool {} not implemented".format(tool))
+    if result[0] is None:
+        tweet(result[1])
+    else:        
+        tweet(msg)
     return in_fc, out_fc, tool, kind
 
 def _tool_():
@@ -371,11 +378,17 @@ def _tool_():
     tool = sys.argv[3]
     kind = 2
     #kind = sys.argv[4]
-    if tool[0] not in ('1', '2', '3', '4', '5'):
-        tweet("Tool {} not implemented".format(tool))        
-        kind = None
     msg = frmt.format(script, in_fc, out_fc, tool, kind)
-    tweet(msg)
+    result = check_path(out_fc)  # check the path
+    if result[0] is None:
+        tweet(result[1])
+        tweet(msg)
+    else:
+        gdb, name = result
+        if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
+            tweet("Tool {} not implemented".format(tool))        
+            kind = None        
+        tweet(msg)
     return in_fc, out_fc, tool, kind
 # ===========================================================================
 # ---- main section: testing or tool run ------------------------------------
@@ -391,6 +404,8 @@ else:
     testing = False
     in_fc, out_fc, tool, kind = _tool_()
 
+# ---- Pick the tools and process --------------------------------------------
+#
 t = tool[0]
 #
 # ---- (1) extent_poly
