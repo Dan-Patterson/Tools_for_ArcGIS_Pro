@@ -11,7 +11,7 @@ Author :
     Dan_Patterson@carleton.ca
 
 Modified : 
-    2019-06-30
+    2019-07-05
 
 Purpose :
     Tools for working with ``free`` ArcGIS Pro functionality
@@ -52,10 +52,15 @@ feature-to-polygon.htm>`_.
 `7 Frequency
 <https://pro.arcgis.com/en/pro-app/tool-reference/analysis/frequency.htm>`_.
 
+**To do**
 
 `Feature to Line
 <https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature
 -to-line.htm>`_.
+
+`Find Identical
+<https://pro.arcgis.com/en/pro-app/tool-reference/data-management/
+find-identical.htm>`_.
 
 `Minimum Bounding Geometry: circle, MABR, Convex Hull
 <https://pro.arcgis.com/en/pro-app/tool-reference/data-management/minimum
@@ -65,6 +70,9 @@ feature-to-polygon.htm>`_.
 <https://pro.arcgis.com/en/pro-app/tool-reference/data-management/polygon
 -to-line.htm>`_.
 
+`Unsplit line
+<https://pro.arcgis.com/en/pro-app/tool-reference/data-management/
+unsplit-line.htm>`_.
 """
 # pylint: disable=C0103  # invalid-name
 # pylint: disable=R0914  # Too many local variables
@@ -82,7 +90,7 @@ from numpy.lib.recfunctions import append_fields
 import fc_geo_io
 import npGeo
 from fc_geo_io import getSR, fc_data, fc_geometry, geometry_fc
-from npGeo import (Geo, updateGeo, _polys_to_unique_pnts_)
+from npGeo import (Geo, Update_Geo, _polys_to_unique_pnts_)
 #from fc_tools import *
 
 importlib.reload(fc_geo_io)
@@ -174,7 +182,7 @@ def extent_poly(in_fc, out_fc, kind):
     g = Geo(a, IFT=IFT, Kind=kind, Info=info)   # create the geo array
     ext = g.extent_rectangles()   # create the extent array
     ext = ext + m                 # shift back, construct the output features
-    ext = updateGeo(ext, K=kind, id_too=None, Info=info)
+    ext = Update_Geo(ext, K=kind, id_too=None, Info=info)
     #
     # ---- produce the geometry
     p = "POLYGON"
@@ -199,7 +207,7 @@ def convex_hull_polys(in_fc, out_fc, kind):
     info = "convex hulls to polygons"
     g = Geo(tmp, IFT=IFT, Kind=kind, Info=info)   # create the geo array
     ch_out = g.convex_hulls(by_part=False, threshold=50)
-    ch_out = updateGeo(ch_out, K=kind, id_too=None, Info=info)
+    ch_out = Update_Geo(ch_out, K=kind, id_too=None, Info=info)
     #
     # ---- produce the geometry
     p = "POLYGON"
@@ -269,8 +277,8 @@ def p_uni_pnts(in_fc, out_fc):
     SR = getSR(in_fc)
     a, IFT, IFT_2 = fc_geometry(in_fc, SR)
     info = "unique points"
-    g = Geo(a, IFT=IFT, Kind=kind, Info=info)   # create the geo array
-    out = _polys_to_unique_pnts_(g, keep_order=True, as_structured=True)
+    a = Geo(a, IFT=IFT, Kind=0, Info=info)   # create the geo array
+    out = _polys_to_unique_pnts_(a, keep_order=True, as_structured=True)
     return out, SR
 
 # ---- polygon to polyline --------------------------------------------------

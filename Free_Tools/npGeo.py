@@ -10,7 +10,7 @@ Script : npGeo.py
 Author :
     Dan_Patterson@carleton.ca
 
-Modified : 2019-06-26
+Modified : 2019-07-05
     Initial creation period 2019-05
 
 Purpose : geometry tools
@@ -555,6 +555,9 @@ class Geo(np.ndarray):
         if not isinstance(ID, (int)):
             print("An integer ID is required, see ``pull`` for multiple values.")
             return None
+        if ID not in np.unique(self.IDs):
+            print("ID not in possible values")
+            return None
         if asGeo:
             f_t = self.IFT[self.IDs == ID]
             s_e = f_t.ravel()
@@ -598,6 +601,9 @@ class Geo(np.ndarray):
         if not isinstance(ID_list, (list, tuple, np.ndarray)):
             print("An array/tuple/list of IDs are required, see ``get``")
             return None
+        if not np.all([a in self.IDs for a in ID_list]):
+            print("Not IDs needed are in the list of possible IDs")
+            return None
         parts_ = np.vstack([self.IFT[self.IDs == i] for i in ID_list])
         vals = [np.asarray(self.XY[p[1]:p[2]]) for p in parts_]
         if not asGeo:
@@ -626,7 +632,7 @@ class Geo(np.ndarray):
         with_null : boolean
             True, to include nan/null points.
         """
-        chunks = self.split(by_part)
+        chunks = self.split_by(by_part)
         if with_null:
             return self.FT[:, 1] - self.FT[:, 0]
         return np.array([len(i[~np.isnan(i[:, 0])]) for i in chunks])
@@ -857,10 +863,7 @@ class Geo(np.ndarray):
         -------
         A 2D ndarray of origin-destination pairs is returned.
         """
-        od = []
-        for p in self.bits:
-            od.append(np.c_[p[:-1], p[1:]])
-        return np.asarray(od)
+        return np.asarray([np.c_[p[:-1], p[1:]] for p in self.bits])
 
     def polylines_to_polygons(self):
         """Return a polygon Geo type from a polyline Geo.  It is assumed that
@@ -868,7 +871,7 @@ class Geo(np.ndarray):
         """
         if self.K == 2:
             print("Already classed as a polygon.")
-            return None
+            return self
         polygons = self.copy()
         polygons.K = 2
         return polygons
@@ -877,7 +880,7 @@ class Geo(np.ndarray):
         """Return a polyline Geo type from a polygon Geo.
         """
         if self.K == 1:
-            # print("Already classed as a polyline.")
+            print("Already classed as a polyline.")
             return self
         polylines = self.copy()
         polylines.K = 1
@@ -886,9 +889,10 @@ class Geo(np.ndarray):
     def polys_to_points(self, keep_order=True):
         """Convert all feature vertices to an ndarray of unique points.
         NaN's are removed.  Optionally, retain point order"""
-        uni, idx = np.unique(self, True, axis=0)
+        a = self[~np.isnan(self.X)]
+        uni, idx = np.unique(a, True, axis=0)
         if keep_order:
-            uni = self[np.sort(idx)]
+            uni = a[np.sort(idx)]
         return np.asarray(uni[~np.isnan(uni[:, 0])])
 
     def close_polylines(self, out_kind=1):
@@ -909,9 +913,7 @@ class Geo(np.ndarray):
         to singlepart features during the process.
         Calls ``_pnts_on_line_`` for Geo bits
         """
-        polys = []
-        for a in self.bits:
-            polys.append(_pnts_on_line_(a, spacing))
+        polys = [_pnts_on_line_(a, spacing) for a in self.bits]
         return Update_Geo(polys, K=self.K)
 
     def polys_to_segments(self):
@@ -1153,25 +1155,19 @@ def _polys_to_unique_pnts_(a, keep_order=True, as_structured=True):
     """Derived from polys_to_points, but allowing for recreation of original
     point order and unique points.  NaN's are removed.
     """
-    ids = a.IDs
-    info = a.point_info(True, True)
-    ii = np.hstack([np.repeat(i, j) for i, j in list(zip(ids, info))])
-    uni, idx = np.unique(a, True, axis=0)
-    if keep_order:
-        srt = np.sort(idx)
-        uni = a[srt]
-        ii = ii[srt]
-    w = ~np.isnan(uni[:, 0])
-    uni = uni[w]
-    ii = ii[w]
+    good = a[~np.isnan(a.X)]
+    uni, idx, inv, cnts = np.unique(good, True, True,
+                                    return_counts=True, axis=0)
     if as_structured:
-        z = np.zeros((uni.shape[0],),
-                     dtype=[('Orig_ID', '<i4'), ('Xs', '<f8'), ('Ys', '<f8')])
-        z['Orig_ID'] = ii
+        N = uni.shape[0]
+        dt = [('New_ID', '<i4'), ('Xs', '<f8'), ('Ys', '<f8'), ('Num', '<i4')]
+        z = np.zeros((N,), dtype=dt)
+        z['New_ID'] = idx
         z['Xs'] = uni[:, 0]
         z['Ys'] = uni[:, 1]
-        return z
-    return ii, np.asarray(uni)
+        z['Num'] = cnts    
+        return z[np.argsort(z, order='New_ID')]  # dump nan coordinates
+    return np.asarray(uni)
 
 def _poly_segments_(a, as_2d=True, as_structured=False):
     """Segment poly* structures into o-d pairs from start to finish
@@ -1264,5 +1260,6 @@ if __name__ == "__main__":
     """optional location for parameters"""
     testing = True
     if testing:
-        in_fc = r"C:\Arc_projects\Free_Tools\Free_tools.gdb\Polygons"
+        in_fc = r"C:\Git_Dan\npgeom\npgeom.gdb\Polygons"
+        #in_fc = r"C:\Git_Dan\npgeom\npgeom.gdb\Ontario_LCConic"
         SR, shapes, poly_arr, a, IFT, IFT_2, g = _test_(in_fc)
