@@ -1,6 +1,11 @@
 
 ## __**Tools for ArcGIS Pro**__
 
+### **Free tools**
+
+Free tools are sample tools that use numpy and arcpy to implement tools that normally require a Standard or Advanced ArcGIS Pro license.
+It should be noted, that in some cases, the implementation is partial because either a full implementation couldn't be done or I didn't feel like it.  In any event, the principles of the tools should be available at the Basic license level... like Split Layer by Attribute ... which took about 15 years to do so.  The scripts can be examined for details.
+
 ### **Concave hulls**
 
 Contains an implementation for concave hull determination based on k-nearest neighbors (included there).  Also an implementation of convex hulls in case you want to compare differences between the hulls.
