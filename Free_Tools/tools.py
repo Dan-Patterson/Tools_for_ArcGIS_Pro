@@ -4,14 +4,14 @@
 tools
 =====
 
-Script :  
+Script :
     tools.py for npgeom
 
-Author :  
+Author :
     Dan_Patterson@carleton.ca
 
-Modified : 
-    2019-07-05
+Modified :
+    2019-07-21
 
 Purpose :
     Tools for working with ``free`` ArcGIS Pro functionality
@@ -80,25 +80,27 @@ unsplit-line.htm>`_.
 # pylint: disable=W0105  # string statement has no effect
 
 import sys
-#from textwrap import dedent
+from textwrap import dedent
 import importlib
 import numpy as np
-#from numpy.lib.recfunctions import structured_to_unstructured as stu
+# from numpy.lib.recfunctions import structured_to_unstructured as stu
 from numpy.lib.recfunctions import unstructured_to_structured as uts
 from numpy.lib.recfunctions import append_fields
 
-import fc_geo_io
-import npGeo
-from fc_geo_io import getSR, fc_data, fc_geometry, geometry_fc
-from npGeo import (Geo, Update_Geo, _polys_to_unique_pnts_)
-#from fc_tools import *
+import arcpy
 
-importlib.reload(fc_geo_io)
+import npGeo_io
+import npGeo
+from npGeo_io import getSR, fc_data, fc_geometry, geometry_fc
+from npGeo import Geo, Update_Geo
+from npGeo_helpers import _polys_to_unique_pnts_
+
+# from fc_tools import *
+
+importlib.reload(npGeo_io)
 importlib.reload(npGeo)
 
-import arcpy
 arcpy.env.overwriteOutput = True
-
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -106,7 +108,7 @@ np.set_printoptions(edgeitems=10, linewidth=80, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
 
-#script = sys.argv[0]  # print this should you need to locate the script
+# script = sys.argv[0]  # print this should you need to locate the script
 
 # ===========================================================================
 # ---- def section: def code blocks go here ---------------------------------
@@ -119,6 +121,7 @@ Create a safe path and try again...\n
 https://community.esri.com/blogs/dan_patterson/2016/08/14/filenames-and
 -file-paths-in-python.
 """
+
 
 def check_path(out_fc):
     """Check for a filegeodatabase and a filename"""
@@ -147,8 +150,9 @@ def tweet(msg):
     arcpy.AddMessage(m)
     print(m)
 
-# ---- extent_poly section --------------------------------------------------
-# ---- (1)
+
+# (1) ---- extent_poly section -----------------------------------------------
+#
 def extent_poly(in_fc, out_fc, kind):
     """Feature envelop to polygon demo.
 
@@ -172,7 +176,7 @@ def extent_poly(in_fc, out_fc, kind):
         tweet(result[1])
         return result[1]
     gdb, name = result
-    # ---- done checks       
+    # ---- done checks
     SR = getSR(in_fc)
     tmp, IFT, IFT_2 = fc_geometry(in_fc, SR)
     SR = getSR(in_fc)
@@ -191,8 +195,9 @@ def extent_poly(in_fc, out_fc, kind):
     geometry_fc(ext, ext.IFT, p_type=p, gdb=gdb, fname=name, sr=SR)
     return "{} completed".format(out_fc)
 
-# ---- convex hulls ---------------------------------------------------------
-# ---- (2)
+
+# (2) ---- convex hulls ------------------------------------------------------
+#
 def convex_hull_polys(in_fc, out_fc, kind):
     """Determine the convex hulls on a shape basis"""
     result = check_path(out_fc)
@@ -200,7 +205,7 @@ def convex_hull_polys(in_fc, out_fc, kind):
         tweet(result[1])
         return result[1]
     gdb, name = result
-    # ---- done checks       
+    # ---- done checks
     SR = getSR(in_fc)
     tmp, IFT, IFT_2 = fc_geometry(in_fc, SR)
     SR = getSR(in_fc)
@@ -216,8 +221,9 @@ def convex_hull_polys(in_fc, out_fc, kind):
     geometry_fc(ch_out, ch_out.IFT, p_type=p, gdb=gdb, fname=name, sr=SR)
     return "{} completed".format(out_fc)
 
-# ---- features to point ----------------------------------------------------
-# ---- (3)
+
+# (3) ---- features to point -------------------------------------------------
+#
 def f2pnts(in_fc):
     """Features to points"""
     result = check_path(out_fc)
@@ -234,14 +240,14 @@ def f2pnts(in_fc):
     cent = g.centroids   # create the centroids
     cent = cent + m
     dt = np.dtype([('Xs', '<f8'), ('Ys', '<f8')])
-    cent = uts(cent, dtype=dt)    
+    cent = uts(cent, dtype=dt)
     return cent, SR
 
-# ---- split line at vertices ------------------------------------------------------
-# ---- (4)
+
+# (4) ---- split line at vertices --------------------------------------------
+#
 def split_at_vertices(in_fc, out_fc):
     """Unique segments retained when poly geometry is split at vertices.
-    
     """
     result = check_path(out_fc)
     if result[0] is None:
@@ -263,9 +269,10 @@ def split_at_vertices(in_fc, out_fc):
     args = [tmp, out_fc] + list(od.dtype.names) + ["GEODESIC", "", SR]
     arcpy.XYToLine_management(*args)
     return
-    
-# ---- vertices to points --------------------------------------------------
-# ---- (5)
+
+
+# (5) ---- vertices to points ------------------------------------------------
+#
 def p_uni_pnts(in_fc, out_fc):
     """Implements _polys_to_unique_pnts_ in npGeo methods section
     """
@@ -278,28 +285,51 @@ def p_uni_pnts(in_fc, out_fc):
     a, IFT, IFT_2 = fc_geometry(in_fc, SR)
     info = "unique points"
     a = Geo(a, IFT=IFT, Kind=0, Info=info)   # create the geo array
-    out = _polys_to_unique_pnts_(a, keep_order=True, as_structured=True)
+    out = _polys_to_unique_pnts_(a, as_structured=True)
     return out, SR
 
-# ---- polygon to polyline --------------------------------------------------
-# ---- (6)
+
+# (6) ---- polygon to polyline -----------------------------------------------
+#
 def pgon_to_pline(in_fc, out_fc):
-    """Polygon to polyline conversion"""
+    """Polygon to polyline conversion.  Multipart shapes are converted to
+    singlepart.  The singlepart geometry is used to produce the polylines."""
     result = check_path(out_fc)
     if result[0] is None:
         print(result[1])
         return result[1]
     gdb, name = result
     SR = getSR(in_fc)
-    a, IFT, IFT_2 = fc_geometry(in_fc, SR)
-    d = fc_data(in_fc)
+    temp = arcpy.MultipartToSinglepart_management(in_fc, r"memory\in_fc_temp")
+    a, IFT, IFT_2 = fc_geometry(temp, SR)
+    tweet("\n(1) fc_geometry complete...")
+    d = fc_data(temp)
+    tweet("\n(2) featureclass data complete...")
     info = "pgon to pline"
-    a = Geo(a, IFT=IFT, Kind=1, Info=info)   # create the geo array
-    geometry_fc(a, IFT, p_type="POLYLINE", gdb=gdb, fname=name, sr=SR)
-    arcpy.da.ExtendTable(out_fc, 'OBJECTID', d, 'OID_')
+    b = Geo(a, IFT=IFT, Kind=1, Info=info)   # create the geo array
+    tweet("\n(3) Geo array complete...")
+    done = geometry_fc(b, IFT, p_type="POLYLINE", gdb=gdb, fname=name, sr=SR)
+    tweet("\n(4) " + done)
+    if arcpy.Exists(out_fc):
+        import time
+        time.sleep(1.0)
+    try:
+        arcpy.da.ExtendTable(out_fc, 'OBJECTID', d, 'OID_')
+        tweet("\n(5) ExtendTable complete...")
+    except:
+        tweet("\narcpy.da.ExtendTable failed... try a spatial join after.")
+    msg = """\n
+        ----
+        Multipart shapes have been converted to singlepart, so view any data
+        carried over during the extendtable join as representing those from
+        the original data.  Recalculate values where appropriate.
+        ----
+        """
+    tweet(dedent(msg))
 
-# ---- frequency and statistics ----------------------------------------------
-# ---- (7)
+
+# (7) ---- frequency and statistics ------------------------------------------
+#
 def freq(a, cls_flds=None, stat_fld=None):
     """Frequency and crosstabulation
 
@@ -351,7 +381,7 @@ def freq(a, cls_flds=None, stat_fld=None):
 #
 script = sys.argv[0]
 pth = "/".join(script.split("/")[:-1])
-npGeo_tbx =  pth + "/npGeo.tbx"
+npGeo_tbx = pth + "/npGeo.tbx"
 
 frmt = """
 Running... {} in in ArcGIS Pro
@@ -361,22 +391,25 @@ Using :
     tool   : {}
     type   : {}
 """
+
+
 def _testing_():
     """Run in spyder
     """
     in_fc = pth + "/npgeom.gdb/Polygons"
     out_fc = pth + "/npgeom.gdb/x1"
-    tool = '9'
-    kind = 0
+    tool = '6'
+    kind = 1  # ---- change !!!
     msg = frmt.format(script, in_fc, out_fc, tool, kind)
     result = check_path(out_fc)  # check the path
     if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
         tweet("Tool {} not implemented".format(tool))
     if result[0] is None:
         tweet(result[1])
-    else:        
+    else:
         tweet(msg)
     return in_fc, out_fc, tool, kind
+
 
 def _tool_():
     """run from a tool in arctoolbox in arcgis pro
@@ -385,7 +418,7 @@ def _tool_():
     out_fc = sys.argv[2]
     tool = sys.argv[3]
     kind = 2
-    #kind = sys.argv[4]
+    # kind = sys.argv[4]
     msg = frmt.format(script, in_fc, out_fc, tool, kind)
     result = check_path(out_fc)  # check the path
     if result[0] is None:
@@ -394,10 +427,12 @@ def _tool_():
     else:
         gdb, name = result
         if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
-            tweet("Tool {} not implemented".format(tool))        
-            kind = None        
+            tweet("Tool {} not implemented".format(tool))
+            kind = None
         tweet(msg)
     return in_fc, out_fc, tool, kind
+
+
 # ===========================================================================
 # ---- main section: testing or tool run ------------------------------------
 #
@@ -406,7 +441,7 @@ tool_list = ['1 extent polygons', '2 feature to point',
              '5 polygon to polyline', '6 frequency and statistics']
 
 if len(sys.argv) == 1:
-    testing =  True
+    testing = True
     in_fc, out_fc, tool, kind = _testing_()
 else:
     testing = False
@@ -431,7 +466,7 @@ elif t == '2':
 # ---- (3)  features to point
 elif t == '3':
     tweet("...\nFeatures to Point...\n")
-    cent, SR  = f2pnts(in_fc)
+    cent, SR = f2pnts(in_fc)
     if arcpy.Exists(out_fc) and arcpy.env.overwriteOutput:
         arcpy.Delete_management(out_fc)
     arcpy.da.NumPyArrayToFeatureClass(cent, out_fc, ['Xs', 'Ys'], SR)
@@ -459,7 +494,7 @@ elif t == '6':
     pgon_to_pline(in_fc, out_fc)
 #
 # ---- (7) frequency and statistics
-elif t == '7':  
+elif t == '7':
     if testing:
         cls_flds = ['Parts', 'Points']
         stat_fld = 'Shape_Area'
@@ -470,7 +505,7 @@ elif t == '7':
     if stat_fld in (None, 'NoneType', ""):
         stat_fld = None
     a = arcpy.da.TableToNumPyArray(in_fc, "*")  # use the whole array
-    out = freq(a, cls_flds, stat_fld)  # do freq analysis 
+    out = freq(a, cls_flds, stat_fld)   # do freq analysis
     if arcpy.Exists(out_fc) and arcpy.env.overwriteOutput:
         arcpy.Delete_management(out_fc)
     arcpy.da.NumPyArrayToTable(out, out_fc)
@@ -481,4 +516,3 @@ elif t == '7':
 #
 if __name__ == "__main__":
     """optional location for parameters"""
-
