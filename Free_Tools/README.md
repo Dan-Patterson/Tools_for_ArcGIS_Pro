@@ -28,19 +28,26 @@ For polygon features.  Reduces the points to a representative centroid.
 
 **Split Line at Vertices**
 
+As it says.  I chose to keep the order of the resultant line segments as they were and not remove apparent `duplicates` for line segments that occur on shared borders.  In such cases, the shared segments will have the same points, but their from-to order is reversed.  There are cases to be made for keeping them or removing them... however, if they are removed, then they are harder to add back in should one want to recreate polygon geometry from the line segments.
 
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/split-line-at-vertices.htm
 
 **Feature Vertices to Points**
 
+Convert polygon features to a centroid.  One point is returned for multipart shapes, but this could be altered if someone has a use-case that might be relevant.
+
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-vertices-to-points.htm
 
 **Polygons to Polylines**
+
+Can't understand why this isn't available at the Basic license level for arcgis pro.  You are just changing the geometry type and dumping some properties.  Really!
 
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-to-polygon.htm
 
 **Frequency**
 
+Another tool that should be free for such basic functionality.
+    https://community.esri.com/blogs/dan_patterson/2016/03/03/create-classes-from-multiple-columns
     https://pro.arcgis.com/en/pro-app/tool-reference/analysis/frequency.htm
 
 
