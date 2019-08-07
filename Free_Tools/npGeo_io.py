@@ -10,7 +10,7 @@ Script :
 Author :
     Dan_Patterson@carleton.ca
 
-Modified : 2019-07-16
+Modified : 2019-07-29
     Creation date during 2019 as part of ``arraytools``.
 
 Purpose : Tools for working with point and poly features as an array class
@@ -62,7 +62,7 @@ __all__ = [
     'poly2array', 'load_geojson',   # shape to array and conversion
     'Arrays_to_Geo', 'Geo_to_arrays', 'array_ift',
     '_make_nulls_', 'getSR', 'fc_composition',       # featureclass methods
-    'fc_data', 'fc_geometry', 'fc_shapes', 'getSR',
+    'fc_data', 'fc_geometry', 'fc_shapes', 'getSR', 'shape_to_K',
     'array_poly', 'geometry_fc',                     # convert back to fc
     'prn_q', '_check', 'prn_tbl', 'prn_geo'          # printing
     ]
@@ -111,10 +111,10 @@ def poly2array(polys):
         out.append(_p2p_(poly))
     return out
 
+
 #
 # ---- json section
-
-
+#
 def load_geojson(pth, full=False, geometry=True):
     """Load a geojson file and convert to a Geo Array.  The geojson is from the
     Features to JSON tool listed in the references.
@@ -249,7 +249,7 @@ def Geo_to_arrays(in_geo):
 #  or from the output of load_geojson
 #
 def array_ift(in_arrays):
-    """Produce a 2D array stack and a I(d) F(rom) T(0) list of the coordinate
+    """Produce a 2D array stack and a I(d) F(rom) T(o) list of the coordinate
     pairs in the resultant.
 
     Parameters
@@ -261,8 +261,8 @@ def array_ift(in_arrays):
 
     Notes
     -----
-    Called by npGeo.from_arrays
-    **fc_geometry** to produce ``Geo`` objects directly from arcgis pro
+    Called by ``npGeo_io.Arrays_to_Geo``.
+    Use ``fc_geometry`` to produce ``Geo`` objects directly from arcgis pro
     featureclasses.
     """
     null_pnt = np.array([[np.nan, np.nan]])
@@ -351,16 +351,31 @@ def getSR(in_fc, verbose=False):
     return SR
 
 
-def fc_composition(in_fc, SR=None, prn=True, start=0, end=10):
+def shape_to_K(in_fc):
+    """The shape type represented by the featureclass"""
+    desc = arcpy.da.Describe(in_fc)
+    s = desc['shapeType']
+    if s == 'Polygon':
+        return 2
+    if s == 'Polyline':
+        return 1
+    if s in ('Point', 'Multipoint'):
+        return 0
+
+
+def fc_composition(in_fc, SR=None, prn=True, start=0, end=50):
     """Featureclass geometry composition in terms of shapes, shape parts, and
     point counts for each part.
     """
     if SR is None:
         SR = getSR(in_fc)
-    with arcpy.da.SearchCursor(in_fc, 'SHAPE@', spatial_reference=SR) as cur:
+    with arcpy.da.SearchCursor(in_fc,
+                               ['OID@', 'SHAPE@'],
+                               spatial_reference=SR) as cur:
         len_lst = []
-        for p_id, row in enumerate(cur):
-            p = row[0]
+        for _, row in enumerate(cur):
+            p_id = row[0]
+            p = row[1]
             parts = p.partCount
             num_pnts = np.asarray([p[i].count for i in range(parts)])
             IDs = np.repeat(p_id, parts)
@@ -591,13 +606,13 @@ def array_poly(a, p_type=None, sr=None, IFT=None):
     Parameters
     ----------
     a : array
-        Points array
+        Points array.
     p_type : text
-        Polygon or Polyline
+        POLYGON or POLYLINE
     sr : spatial reference
-        Spatial reference object, name or id
+        Spatial reference object, name or id.
     IFT : array
-        An Nx3 array consisting of I(d)F(rom)T(o) points
+        An Nx3 array consisting of I(d)F(rom)T(o) points.
 
     Notes
     -----
@@ -606,7 +621,7 @@ def array_poly(a, p_type=None, sr=None, IFT=None):
 
     Outer rings are ordered clockwise, inner rings
     (holes) are ordered counterclockwise.  For polylines, there is no concept
-    of order. Splitting is modelled after _nan_split_(arr)
+    of order. Splitting is modelled after _nan_split_(arr).
     """
     def _arr_poly_(arr, SR, as_type):
         """Slices the array where nan values appear, splitting them off during
@@ -624,9 +639,9 @@ def array_poly(a, p_type=None, sr=None, IFT=None):
         aa = []
         for sub in subs:
             aa.append([arcpy.Point(*pairs) for pairs in sub])
-        if as_type == 'POLYGON':
+        if as_type.upper() == 'POLYGON':
             poly = arcpy.Polygon(arcpy.Array(aa), SR)
-        elif as_type == 'POLYLINE':
+        elif as_type.upper() == 'POLYLINE':
             poly = arcpy.Polyline(arcpy.Array(aa), SR)
         return poly
     # ----
@@ -677,7 +692,7 @@ def geometry_fc(a, IFT, p_type=None, gdb=None, fname=None, sr=None):
     """
     if p_type is None:
         p_type = "POLYGON"
-    out = array_poly(a, p_type, sr=sr, IFT=IFT)   # call array_poly
+    out = array_poly(a, p_type.upper(), sr=sr, IFT=IFT)   # call array_poly
     name = gdb + "/" + fname
     wkspace = arcpy.env.workspace = 'memory'  # legacy is in_memory
     arcpy.management.CreateFeatureclass(wkspace, fname, p_type,
@@ -966,31 +981,6 @@ def flatten_to_points(iterable):
             else:
                 del stack[-2:]
 
-    def it(iterable):
-        """iterable version"""
-        out = []
-        coords = []
-        for cnt, stack in enumerate(iterable):
-            sub = []
-            parts = 0
-            rings = 0
-            if isinstance(stack, list):  # part check
-                parts = len(stack)
-                for i in range(parts):
-                    rings = 0
-                    if isinstance(stack[i], list):  # ring check
-                        rings = len(stack[i])
-                        if rings > 0:
-                            for j in range(rings):
-                                out.append([cnt, i, j])
-                                sub.append(stack[i][j])  # stack[cnt][i]])
-                            if rings > 1:
-                                sub.append([[np.nan, np.nan]])
-                        else:
-                            out.append([cnt, i, 0])
-                            sub.append(stack[i])
-                        coords.append(np.vstack(sub)[:-1])
-        return out, coords
     # ----
     z = gen(iterable)
     dt = np.dtype({'names': ['Xs', 'Ys', 'a', 'b', 'c', 'd'],

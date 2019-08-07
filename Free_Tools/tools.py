@@ -62,7 +62,7 @@ feature-to-polygon.htm>`_.
 <https://pro.arcgis.com/en/pro-app/tool-reference/data-management/
 find-identical.htm>`_.
 
-`Minimum Bounding Geometry: circle, MABR, Convex Hull
+`Minimum Bounding Geometry: circle, MABR
 <https://pro.arcgis.com/en/pro-app/tool-reference/data-management/minimum
 -bounding-geometry.htm>`_.
 
@@ -91,7 +91,7 @@ import arcpy
 
 import npGeo_io
 import npGeo
-from npGeo_io import getSR, fc_data, fc_geometry, geometry_fc
+from npGeo_io import getSR, shape_to_K, fc_data, fc_geometry, geometry_fc
 from npGeo import Geo, Update_Geo
 from npGeo_helpers import _polys_to_unique_pnts_
 
@@ -118,29 +118,9 @@ or you had flotsam, including spaces, in the path, like...\n
   {}\n
 Create a safe path and try again...\n
 `Filenames and paths in Python`
-https://community.esri.com/blogs/dan_patterson/2016/08/14/filenames-and
--file-paths-in-python.
+<https://community.esri.com/blogs/dan_patterson/2016/08/14/filenames-and
+-file-paths-in-python>`_.
 """
-
-
-def check_path(out_fc):
-    """Check for a filegeodatabase and a filename"""
-    _punc_ = '!"#$%&\'()*+,-;<=>?@[]^`{|}~ '
-    flotsam = " ".join([i for i in _punc_]) + " ... plus the `space`"
-    msg = msg0.format(flotsam)
-    if np.any([i in out_fc for i in _punc_]):
-        return (None, msg)
-    if "\\" in out_fc:
-        pth = out_fc.split("\\")
-    else:
-        pth = out_fc.split("/")
-    if len(pth) == 1:
-        return (None, msg)
-    name = pth[-1]
-    gdb = "/".join(pth[:-1])
-    if gdb[-4:] != '.gdb':
-        return (None, msg)
-    return gdb, name
 
 
 def tweet(msg):
@@ -149,6 +129,50 @@ def tweet(msg):
     m = "\n{}\n".format(msg)
     arcpy.AddMessage(m)
     print(m)
+
+
+def check_path(fc):
+    """
+    ---- check_path ----
+
+    Checks for a filegeodatabase and a filename. Flag files and paths
+    containing `flotsam` as being invalid
+
+    Either you failed to specify the geodatabase location and filename properly
+    or you had flotsam, in the path, like...::
+
+       \'!"#$%&\'()*+,-;<=>?@[]^`{|}~  including the `space`
+
+    Create a safe path and try again...
+
+    References
+    ----------
+    `Lexical analysis
+    <https://docs.python.org/3/reference/lexical_analysis.html>`_.
+
+    `Filenames and paths in Python
+    <https://community.esri.com/blogs/dan_patterson/2016/08/14/filenames-and
+    -file-paths-in-python>`_.
+    """
+    msg = dedent(check_path.__doc__)
+    _punc_ = '!"#$%&\'()*+,-;<=>?@[]^`~}{ '
+    flotsam = " ".join([i for i in _punc_])  # " ... plus the `space`"
+    if np.any([i in fc for i in flotsam]):
+        tweet(msg)
+        return (None, msg)
+    if "\\" in fc:
+        pth = fc.split("\\")
+    else:
+        pth = fc.split("/")
+    if len(pth) == 1:
+        tweet(msg)
+        return (None, msg)
+    name = pth[-1]
+    gdb = "/".join(pth[:-1])
+    if gdb[-4:] != '.gdb':
+        tweet(msg)
+        return (None, msg)
+    return gdb, name
 
 
 # (1) ---- extent_poly section -----------------------------------------------
@@ -231,7 +255,8 @@ def f2pnts(in_fc):
         print(result[1])
         return result[1]
     gdb, name = result
-    SR = getSR(in_fc)
+    SR = getSR(in_fc)         # getSR, shape_to_K  and fc_geometry from
+    kind = shape_to_K(in_fc)  # npGeo_io
     tmp, IFT, IFT_2 = fc_geometry(in_fc, SR)
     m = np.nanmin(tmp, axis=0)    # shift to bottom left of extent
     info = "feature to points"
@@ -274,7 +299,7 @@ def split_at_vertices(in_fc, out_fc):
 # (5) ---- vertices to points ------------------------------------------------
 #
 def p_uni_pnts(in_fc, out_fc):
-    """Implements _polys_to_unique_pnts_ in npGeo methods section
+    """Implements _polys_to_unique_pnts_ in ``npGeo_helpers``.
     """
     result = check_path(out_fc)
     if result[0] is None:
@@ -316,7 +341,7 @@ def pgon_to_pline(in_fc, out_fc):
     try:
         arcpy.da.ExtendTable(out_fc, 'OBJECTID', d, 'OID_')
         tweet("\n(5) ExtendTable complete...")
-    except:
+    finally:
         tweet("\narcpy.da.ExtendTable failed... try a spatial join after.")
     msg = """\n
         ----
@@ -328,7 +353,36 @@ def pgon_to_pline(in_fc, out_fc):
     tweet(dedent(msg))
 
 
-# (7) ---- frequency and statistics ------------------------------------------
+# (7) ---- bounding circles --------------------------------------------------
+#
+def bounding_circles(in_fc, out_fc, kind=2):
+    """Minimum area bounding circles.  Change `angle=5` to a smaller value for
+    denser points on circle perimeter.
+    """
+    result = check_path(out_fc)
+    if result[0] is None:
+        print(result[1])
+        return result[1]
+    gdb, name = result
+    SR = getSR(in_fc)         # getSR, shape_to_K  and fc_geometry from
+    kind = shape_to_K(in_fc)  # npGeo_io
+    tmp, IFT, IFT_2 = fc_geometry(in_fc, SR)
+    m = np.nanmin(tmp, axis=0)    # shift to bottom left of extent
+    info = "bounding circles"
+    a = tmp - m
+    g = Geo(a, IFT=IFT, Kind=kind, Info=info)   # create the geo array
+    out = g.bounding_circles(angle=2, return_xyr=False)
+    circs = [arr + m for arr in out]
+    circs = Update_Geo(circs, K=2, id_too=None, Info=info)
+    # ---- produce the geometry
+    p = "POLYGON"
+    if kind == 1:
+        p = "POLYLINE"
+    geometry_fc(circs, circs.IFT, p_type=p, gdb=gdb, fname=name, sr=SR)
+    return "{} completed".format(out_fc)
+
+
+# (8) ---- frequency and statistics ------------------------------------------
 #
 def freq(a, cls_flds=None, stat_fld=None):
     """Frequency and crosstabulation
@@ -336,15 +390,15 @@ def freq(a, cls_flds=None, stat_fld=None):
     Parameters
     ----------
     a : array
-        A structured array
+        A structured array.
     flds : field
-        Fields to use in the analysis
+        Fields to use in the analysis.
 
     Notes
     -----
-    1. slice the input array by the classification fields
-    2. sort the sliced array using the flds as sorting keys
-    3. use unique on the sorted array to return the results and the counts
+    1. Slice the input array by the classification fields.
+    2. Sort the sliced array using the flds as sorting keys.
+    3. Use unique on the sorted array to return the results and the counts.
 
     >>> np.unique(ar, return_index=False, return_inverse=False,
     ...           return_counts=True, axis=None)
@@ -397,12 +451,12 @@ def _testing_():
     """Run in spyder
     """
     in_fc = pth + "/npgeom.gdb/Polygons"
-    out_fc = pth + "/npgeom.gdb/x1"
-    tool = '6'
-    kind = 1  # ---- change !!!
+    out_fc = pth + "/npgeom.gdb/circles"
+    tool = '7'
+    kind = 2  # ---- change !!!
     msg = frmt.format(script, in_fc, out_fc, tool, kind)
     result = check_path(out_fc)  # check the path
-    if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
+    if tool[0] not in ('1', '2', '3', '4', '5', '6', '7', '8'):
         tweet("Tool {} not implemented".format(tool))
     if result[0] is None:
         tweet(result[1])
@@ -426,7 +480,7 @@ def _tool_():
         tweet(msg)
     else:
         gdb, name = result
-        if tool[0] not in ('1', '2', '3', '4', '5', '6', '7'):
+        if tool[0] not in ('1', '2', '3', '4', '5', '6', '7', '8'):
             tweet("Tool {} not implemented".format(tool))
             kind = None
         tweet(msg)
@@ -463,7 +517,7 @@ elif t == '2':
     tweet("...\nConvex hulls...\n")
     result = convex_hull_polys(in_fc, out_fc, kind)
 #
-# ---- (3)  features to point
+# ---- (3) features to point
 elif t == '3':
     tweet("...\nFeatures to Point...\n")
     cent, SR = f2pnts(in_fc)
@@ -493,8 +547,15 @@ elif t == '6':
         arcpy.Delete_management(out_fc)
     pgon_to_pline(in_fc, out_fc)
 #
-# ---- (7) frequency and statistics
+# ---- (7) bounding circles
 elif t == '7':
+    tweet("...\nBounding Circles...\n")
+    if arcpy.Exists(out_fc) and arcpy.env.overwriteOutput:
+        arcpy.Delete_management(out_fc)
+    bounding_circles(in_fc, out_fc, kind)
+#
+# ---- (8) frequency and statistics
+elif t == '8':
     if testing:
         cls_flds = ['Parts', 'Points']
         stat_fld = 'Shape_Area'
