@@ -7,7 +7,7 @@ These demo scripts and the toolbox show how numpy and arcpy can play nice togeth
 In some cases, the outputs are only one option of what the Esri tool provides, for example #6 Polygons to Polylines, is just that... a simple conversion of the geometry type, no fancy intersection and overlap stuff... you get what you pay for, but the widest use is probably the simplest.
 
 
-## Last update : 2019-07-23 ##
+## Last update : 2019-08-06 ##
 
 The toolbox and scripts allow one to determine:
 
@@ -40,9 +40,15 @@ Convert polygon features to a centroid.  One point is returned for multipart sha
 
 **Polygons to Polylines**
 
-Can't understand why this isn't available at the Basic license level for arcgis pro.  You are just changing the geometry type and dumping some properties.  Really!
+Really... You are just changing from polygons to polylines.  They are still a closed geometry, nothing fancy geometry-wise.  Should definitely be **Freed** from its shackles.
 
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-to-polygon.htm
+
+**Bounding Circles**
+
+Another container that has been around for a long time in a variety of formats and readily implemented in python.  Sort-of ported this over from an old toolbox for ArcMap, but redone for the new geom class.  Speedy and accurate.
+
+    https://pro.arcgis.com/en/pro-app/tool-reference/data-management/minimum-bounding-geometry.htm
 
 **Frequency**
 
