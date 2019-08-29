@@ -32,6 +32,7 @@ Produce axis-aligned extent rectangles from polygon/poline features.
 This toolbox provides frequency counts for combinations of tabular data... a combination of the classes in two or more fields.
 An option ability to determine basic statistics for another numeric field based on the new classes.
 
+-------------------------
 ### **Python Code Samples**
 
 A repository for Python Code Samples, largely associated with ArcGIS software but some standalone applications.
@@ -40,15 +41,17 @@ Toolboxes are contained in separate folders.  Each folder has a scripts folder c
 
 To use, all you need to do is download scripts folder and the toolbox and install in your working path or in a path accessible to all projects.
 
+-------------------------
 ### **Polygon_line tools**
 
 A collection of tools directed towards work with poly* features.
 
+-------------------------
 ### **field_calculator**
 
 This folder is a collection of scripts which contain defs which can be used in other modules or specifically, they can be used in the field calculator in ArcGIS Pro or ArcMap.  The header contains useage information, and a python parser is assumed in all cases.  Check the respective help documentation on how to use the field calculator from within a table or the Calculate Field tool in Pro.
 
-
+-------------------------
 ### **point_tools**
 
 This folder contains a toolbox and associated script(s) for ArcGIS Pro to work with points.  Also found at
@@ -75,6 +78,7 @@ https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-w
 
 (8)  Whatever else I forgot to mention.
 
+-------------------------
 ### **table_tools**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
