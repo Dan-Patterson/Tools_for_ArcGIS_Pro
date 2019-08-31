@@ -10,7 +10,7 @@ Author :
     Dan_Patterson@carleton.ca
 
 Modified :
-    2019-08-05
+    2019-08-30
 
 Purpose :
     Returns the smallest circle enclosing a shape in the form of a center and
