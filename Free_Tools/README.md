@@ -1,4 +1,4 @@
-## Free Tools ##
+## Free the tools ##
 
 Developed in ArcGIS Pro 2.4, python 3.6.8 and numpy 1.16.4.
 
