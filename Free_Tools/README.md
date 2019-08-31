@@ -7,7 +7,7 @@ These demo scripts and the toolbox show how numpy and arcpy can play nice togeth
 In some cases, the outputs are only one option of what the Esri tool provides, for example #6 Polygons to Polylines, is just that... a simple conversion of the geometry type, no fancy intersection and overlap stuff... you get what you pay for, but the widest use is probably the simplest.
 
 
-## Last update : 2019-08-06 ##
+## Last update : 2019-08-30 ##
 
 The toolbox and scripts allow one to determine:
 
