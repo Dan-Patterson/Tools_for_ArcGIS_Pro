@@ -1,27 +1,28 @@
  # -*- coding: UTF-8 -*-
 """
+=========
 cross_tab
 =========
 
-Script :   cross_tab.py
+Script : cross_tab.py
 
-Author:   Dan_Patterson@carleton.ca
+Author: Dan_Patterson@carleton.ca
 
-Modified : 2018-05-26
+Modified : 2019-02-23
 
-Purpose :  Crosstabulate data
+Purpose : Crosstabulate data
 
-References :
+References
+----------
 
-.. `<https://stackoverflow.com/questions/12983067/how-to-find-unique-vectors-of
--a-2d-array-over-a-particular-axis-in-a-vectorized>`
+`<https://stackoverflow.com/questions/12983067/how-to-find-unique-vectors-of
+-a-2d-array-over-a-particular-axis-in-a-vectorized>`_.
 
-: https://stackoverflow.com/questions/16970982/find-unique-rows-in-numpy-array
-: http://stackoverflow.com/questions/38030054/
-:      create-adjacency-matrix-in-python-for-large-dataset
-: np.unique
-: in the newer version, they use flags to get the sums
-:
+`<https://stackoverflow.com/questions/16970982/find-unique-rows-in-numpy
+-array>`_.
+
+`<http://stackoverflow.com/questions/38030054/create-adjacency-matrix-in-
+python-for-large-dataset>`_.
 """
 import sys
 import numpy as np
@@ -50,13 +51,17 @@ def tweet(msg):
 
 def _prn(r, c, a):
     """fancy print formatting.
-    """
+    """ 
+    r = r.tolist()
+    r.append('Total')
+    c = c.tolist()
+    c.append('Total')
     r_sze = max(max([len(str(i)) for i in r]), 8)
     c_sze = [max(len(str(i)), 5) for i in c]
     f_0 = '{{!s:<{}}} '.format(r_sze)
     f_1 = ('{{!s:>{}}} '*len(c)).format(*c_sze)
     frmt = f_0 + f_1
-    hdr = 'Result' + '_' * (r_sze-7)
+    hdr = 'Result' + '_'*(r_sze-7)
     txt = [frmt.format(hdr, *c)]
     txt2 = txt + [frmt.format(r[i], *a[i]) for i in range(len(r))]
     result = "\n".join(txt2)
@@ -65,19 +70,23 @@ def _prn(r, c, a):
 
 def crosstab(row, col, verbose=False):
     """Crosstabulate 2 data arrays, shape (N,), using np.unique.
-    :  scipy.sparse has similar functionality and is faster for large arrays.
-    :
-    :Requires:  A 2D array of data with shape(N,) representing two variables
-    :--------
-    : row - row variable
-    : col - column variable
-    :
-    :Returns:
-    : ctab - the crosstabulation result as row, col, count array
-    : a - the crosstabulation in a row, col, count, but filled out whether a
-    :     particular combination exists or not.
-    : r, c - unique values/names for the row and column variables
-    :
+    scipy.sparse has similar functionality and is faster for large arrays.
+
+    Parameters
+    ----------
+    a : array
+        A 2D array of data with shape(N,) representing two variables
+    row : text
+        row variable
+    col : text
+        column variable
+
+    Returns
+    -------
+    ctab : the crosstabulation result as row, col, count array
+    a : the crosstabulation in a row, col, count, but filled out whether a
+        particular combination exists or not.
+    r, c : unique values/names for the row and column variables
     """
     dt = np.dtype([('row', row.dtype), ('col', col.dtype)])
     rc = np.asarray(list(zip(row, col)), dtype=dt)
@@ -88,12 +97,14 @@ def crosstab(row, col, verbose=False):
     rcc_dt = u.dtype.descr
     rcc_dt.append(('Count', '<i4'))
     ctab = np.asarray(list(zip(u['row'], u['col'], cnt)), dtype=rcc_dt)
-    a = np.zeros((len(r), len(c)), dtype=np.int_)
+    a = np.zeros((len(r)+1, len(c)+1), dtype=np.int_)
     rc = [[(np.where(r == i[0])[0]).item(),
            (np.where(c == i[1])[0]).item()] for i in ctab]
     for i in range(len(ctab)):
         rr, cc = rc[i]
         a[rr, cc] = ctab[i][2]
+    a[-1,:] = np.sum(a, axis=0)
+    a[:, -1] = np.sum(a, axis=1)
     result = _prn(r, c, a)
     if verbose:
         tweet(result)
@@ -124,27 +135,27 @@ def _demo():
     """
     # Load the table, with 2 fields, produce the table and the crosstabulation
     f = "/".join(script.split("/")[:-2]) + '/Table_tools.gdb/pnts_2K_normal'
-    flds = ['Text01', 'Sequences2']
+    flds = ['Text01', 'Sequences']
     t = tbl_2_np_array(in_tbl=f, flds=flds)
     #
-    rows = t[flds[0]]
-    cols = t[flds[1]]
-    ctab, a, result, r, c = crosstab(rows, cols, verbose=True)
+    row = t[flds[0]]
+    col = t[flds[1]]
+    ctab, a, result, r, c = crosstab(row, col, verbose=True)
     return ctab, a, result, r, c
 
 
 def _demo2():
     """load a npy file
 
-    - C:\GIS\Tools_scripts\Data\sample_20.npy
-    - C:\GIS\Tools_scripts\Data\sample_1000.npy
-    - C:\GIS\Tools_scripts\Data\sample_10K.npy
-    - C:\GIS\Tools_scripts\Data\sample_100K.npy
+    - /Data/sample_20.npy
+    - /Datasample_1000.npy
+    - /Data/sample_10K.npy
+    - /Data/sample_100K.npy
 
     dtype=[('OBJECTID', '<i4'), ('f0', '<i4'), ('County', '<U2'),
            ('Town', '<U6'), ('Facility', '<U8'), ('Time', '<i4')])
     """
-    f = r'C:\GIS\A_Tools_scripts\Data\sample_100K.npy'
+    f = "/".join(script.split("/")[:-3]) + "/Data/sample_100K.npy"
     t = np.load(f)
     rows = t['County']  #t['Text01']
     cols = t['Town']
@@ -179,6 +190,7 @@ else:
     row_fld = sys.argv[2]
     col_fld = sys.argv[3]
     out_tbl = sys.argv[4]
+    txt_file = sys.argv[5]
     flds = [row_fld, col_fld]
     #
     t = tbl_2_np_array(in_tbl=in_tbl, flds=flds)
@@ -195,6 +207,11 @@ else:
     tweet(msg)
     if not (out_tbl in ['#', '', None]):
         arcpy.da.NumPyArrayToTable(ctab, out_tbl)
+    if not (txt_file in ['#', '', None]):
+        with open(txt_file, 'w') as f:
+            f.write("Crosstab for ... {}\n".format(in_tbl))
+            f.write(result)
+
 if __name__ == "__main__":
     """run crosstabulation with data"""
 #    ctab, a, result, r, c = _demo()

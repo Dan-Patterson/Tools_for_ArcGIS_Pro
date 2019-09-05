@@ -182,7 +182,7 @@ def _tool():
     _, oid_fld, _, _ = fc_info(in_tbl, prn=False)  # run fc_info
     #
     flds = [oid_fld, in_fld]
-    in_arr = tbl_2_np_array(in_tbl, flds)
+    in_arr = tbl_2_nparray(in_tbl, flds)
     tweet("{!r:}".format(in_arr))
     xtend = True
     return in_tbl, in_arr, in_fld, out_fld, del_fld, func, xtend
