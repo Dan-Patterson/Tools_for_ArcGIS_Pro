@@ -10,7 +10,7 @@ Script :
 Author :
     Dan_Patterson@carleton.ca
 
-Modified : 2019-08-26
+Modified : 2019-09-06
     Creation date during 2019 as part of ``arraytools``.
 
 Purpose : Tools for working with point and poly features as an array class
@@ -36,6 +36,7 @@ References
 
 
 """
+# pylint: disable=C0330  # Wrong hanging indentation
 # pylint: disable=C0103  # invalid-name
 # pylint: disable=E0611  # stifle the arcgisscripting
 # pylint: disable=E1101  # ditto for arcpy
@@ -45,21 +46,21 @@ References
 # pylint: disable=W0621  # redefining name
 # pylint: disable=W0621  # redefining name
 import sys
-from textwrap import dedent  # indent
+from textwrap import dedent, indent
 import json
 
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured as stu
 from numpy.lib.recfunctions import unstructured_to_structured as uts
 
-from npGeo import *
+from npGeo import Geo
 
 import arcpy
 
 
 __all__ = [
     'poly2array', 'load_geojson',   # shape to array and conversion
-    'Arrays_to_Geo', 'Geo_to_arrays', 'array_ift',
+    'arrays_to_Geo', 'Geo_to_arrays', 'array_ift',
     '_make_nulls_', 'getSR', 'fc_composition',       # featureclass methods
     'fc_data', 'fc_geometry', 'fc_shapes', 'getSR', 'shape_to_K',
     'array_poly', 'geometry_fc',                     # convert back to fc
@@ -205,7 +206,7 @@ def fc_json(in_fc, SR=None):
 #    Construct the Geo array from a list of ndarrays or an ndarray and
 #    deconstruct, the Geo array back to its origins
 #
-def Arrays_to_Geo(in_arrays, Kind=2, Info=None):
+def arrays_to_Geo(in_arrays, Kind=2, Info=None):
     """Produce a Geo class object from a list/tuple of arrays.
 
     Parameters
@@ -258,13 +259,16 @@ def array_ift(in_arrays):
 
     Notes
     -----
-    Called by ``npGeo_io.Arrays_to_Geo``.
+    Called by ``npGeo_io.arrays_to_Geo``.
     Use ``fc_geometry`` to produce ``Geo`` objects directly from arcgis pro
     featureclasses.
     """
     null_pnt = np.array([[np.nan, np.nan]])
     id_too = []
     a_2d = []
+    if isinstance(in_arrays, np.ndarray):
+        if in_arrays.ndim == 2:
+            in_arrays = [in_arrays]
     for cnt, p in enumerate(in_arrays):
         p = np.asarray(p)
         kind = p.dtype.kind
@@ -277,7 +281,6 @@ def array_ift(in_arrays):
                 bits = bits[:-1]
                 stack = np.vstack(bits)
                 id_too.append([cnt, len(stack)])
-                # id_too.extend([[cnt, len(k)] for k in bits])
             sub = stack
         elif kind in NUMS:
             sub = []
@@ -575,7 +578,7 @@ def fc_geometry(in_fc, SR=None, IFT_rec=False, true_curves=False, deg=5):
     SR = desc['spatialReference']
     if fc_kind == "Point":
         print(dedent(msg))
-        return None
+        return None, None
     if fc_kind == "Multipoint":
         id_len, a_2d = _multipnt_(in_fc, SR)
     else:
@@ -631,9 +634,9 @@ def array_poly(a, p_type=None, sr=None, IFT=None):
     Polyline or polygon features can be created from the array data.  The
     features can be multipart with or without interior rings.
 
-    Outer rings are ordered clockwise, inner rings
-    (holes) are ordered counterclockwise.  For polylines, there is no concept
-    of order. Splitting is modelled after _nan_split_(arr).
+    Outer rings are ordered clockwise, inner rings (holes) are ordered
+    counterclockwise.  For polylines, there is no concept of order.
+    Splitting is modelled after _nan_split_(arr).
     """
     def _arr_poly_(arr, SR, as_type):
         """Slices the array where nan values appear, splitting them off during
@@ -657,11 +660,6 @@ def array_poly(a, p_type=None, sr=None, IFT=None):
             poly = arcpy.Polyline(arcpy.Array(aa), SR)
         return poly
     # ----
-#    if not np.all([check is None for check in [p_type, sr.name, IFT]]):
-#        msg = """
-#        Missing or incorrect parameters...
-#        {}"""
-#        print(dedent(msg).format(dedent(array_poly.__doc__)))
     ids = IFT[:, 0]
     from_to = IFT[:, 1:]
     chunks = [a[f:t] for f, t in from_to]  # ---- _poly_pieces_ chunks input
@@ -919,6 +917,26 @@ def prn_geo(a, rows_m=100, names=None, deci=2, width=100):
 
 # ==== Extras ===============================================================
 #
+def shape_properties(a_shape, prn=True):
+    """Get some basic shape geometry properties
+    """
+    coords = a_shape.__geo_interface__['coordinates']
+    sr = a_shape.spatialReference
+    props = ['type', 'isMultipart', 'partCount', 'pointCount', 'area',
+             'length', 'length3D', 'centroid', 'trueCentroid', 'firstPoint',
+             'lastPoint', 'labelPoint']
+    props2 = [['Name', sr.name], ['Factory code', sr.factoryCode]]
+    t = "\n".join(["{!s:<12}: {}".format(i, a_shape.__getattribute__(i))
+                   for i in props])
+    t = t + "\n" + "\n".join(["{!s:<12}: {}".format(*i) for i in props2])
+    tc = '{!r:}'.format(np.array(coords))
+    tt = t + "\nCoordinates\n" + indent(tc, '....')
+    if prn:
+        print(tt)
+    else:
+        return tt
+
+
 def gms(arr):
     """Get maximum dimensions in a list/array
 

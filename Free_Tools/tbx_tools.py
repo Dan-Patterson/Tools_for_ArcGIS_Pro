@@ -288,16 +288,16 @@ def split_at_vertices(in_fc, out_fc):
             in_fc, SR=SR, IFT_rec=False, true_curves=False, deg=5
             )
     ag = Geo(tmp, IFT)
-#    fr_to = ag.unique_segments()  # geo method
-    fr_to = ag.polys_to_segments()
-    dt = np.dtype([('X_orig', 'f8'), ('Y_orig', 'f8'),
-                   ('X_dest', 'f8'), ('Y_dest', 'f8')])
-    od = uts(fr_to, dtype=dt)  # ---- unstructured to structured
+    od = ag.polys_to_segments(as_basic=False, as_3d=False)
+#    dt = np.dtype([('X_orig', 'f8'), ('Y_orig', 'f8'),
+#                   ('X_dest', 'f8'), ('Y_dest', 'f8')])
+#    od = uts(fr_to[:, :4], dtype=dt)  # ---- unstructured to structured
     tmp = "memory/tmp"
     if arcpy.Exists(tmp):
         arcpy.Delete_management(tmp)
     arcpy.da.NumPyArrayToTable(od, tmp)
-    args = [tmp, out_fc] + list(od.dtype.names) + ["GEODESIC", "", SR]
+    xyxy = list(od.dtype.names[:4])
+    args = [tmp, out_fc] + xyxy + ["GEODESIC", "Orig_id", SR]
     arcpy.XYToLine_management(*args)
     return
 

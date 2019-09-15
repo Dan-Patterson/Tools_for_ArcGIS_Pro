@@ -1,20 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-script name here
-=======
+=========
+npg_table
+=========
 
-Script :   template.py
+Script :
+    npg_table.py
 
-Author :   Dan_Patterson@carleton.ca
+Author :
+    Dan_Patterson@carleton.ca
 
-Modified : 2019-08-25
+Modified :
+    2019-09-06
 
-Purpose :  Tools for working with tabular data in the Geo class
-
-Notes:
-
-References:
-
+Purpose :
+    Tools for working with tabular data in the Geo class.
 """
 # pylint: disable=C0103  # invalid-name
 # pylint: disable=R0914  # Too many local variables
@@ -22,15 +22,16 @@ References:
 # pylint: disable=W0105  # string statement has no effect
 
 import sys
+from textwrap import dedent
 import numpy as np
+from numpy.lib.recfunctions import repack_fields
+from numpy.lib.recfunctions import append_fields
+from numpy.lib.recfunctions import structured_to_unstructured as stu
+# from numpy.lib.recfunctions import unstructured_to_structured as uts
+# from numpy.lib.recfunctions import _keep_fields
+
 from npgeom import npg_io
 from npg_io import prn_tbl
-
-# from numpy.lib.recfunctions import structured_to_unstructured as stu
-# from numpy.lib.recfunctions import unstructured_to_structured as uts
-from numpy.lib.recfunctions import repack_fields
-# from numpy.lib.recfunctions import _keep_fields
-from numpy.lib.recfunctions import append_fields
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -46,10 +47,24 @@ __all__ = ['crosstab_tbl', 'crosstab_rc', 'crosstab_array', 'col_stats',
            'group_stats']
 
 
+def _view_(a):
+    """Return a view of the array using the dtype and length
+
+    Notes
+    -----
+    The is a quick function.  The expectation is that the array contains a
+    uniform dtype (e.g 'f8').  For example, coordinate values in the form
+    ``dtype([('X', '<f8'), ('Y', '<f8')])`` maybe with a Z
+
+    See ``structured_to_unstructured`` in np.lib.recfunctions and the imports.
+    """
+    return stu(a)
+
+
 # ==== Crosstabulation tools =================================================
 # ---- fancy print/string formatter for crosstabulation and pivot
 def _prn(r, c, a, stat_name='Count'):
-    """fancy print formatting.
+    """Fancy print formatting.
     """
     r = r.tolist()
     r.append(stat_name)
@@ -67,8 +82,8 @@ def _prn(r, c, a, stat_name='Count'):
     return result
 
 
-def _as_pivot(a):
-    """present results in pivot table format"""
+def _as_pivot_(a):
+    """Used by ``crosstab_tbl``. Present results in pivot table format."""
     if a.dtype.fields is None:
         print("\n...\nStructured array with field names is required")
         return a
@@ -122,10 +137,10 @@ def crosstab_tbl(in_tbl, flds=None, as_pivot=True):
     a = npg_io.fc_data(in_tbl)
     if flds is None:
         flds = list(a.dtype.names)
-    uni, idx, cnt = np.unique(a[flds], True, False, True)
-    out_arr = append_fields(uni, "Counts", cnt, usemask=False)
+    uni, idx, cnts = np.unique(a[flds], True, False, True)
+    out_arr = append_fields(uni, "Counts", cnts, usemask=False)
     if as_pivot:
-        return as_pivot(out_arr)
+        return _as_pivot_(out_arr)
     return out_arr
 
 
@@ -168,18 +183,17 @@ def crosstab_array(a, flds=None):
     Parameters
     ----------
     a : array
-       input structured array
-
+       Input structured array.
     flds : string or list
        Fields/columns to use in the analysis.  For a single column, a string
        is all that is needed.  Multiple columns require a list of field names.
 
     Notes
     -----
-    (1) slice the input array by the classification fields
-    (2) sort the sliced array using the flds as sorting keys
-    (3) use unique on the sorted array to return the results
-    (4) reassemble the original columns and the new count data
+    (1) Slice the input array by the classification fields.
+    (2) Sort the sliced array using the flds as sorting keys.
+    (3) Use unique on the sorted array to return the results.
+    (4) Reassemble the original columns and the new count data.
     """
     if flds is None:
         return None
@@ -189,12 +203,12 @@ def crosstab_array(a, flds=None):
     # a = _keep_fields(a, flds)  # alternative to repack_fields
     idx = np.argsort(a, axis=0, order=flds)  # (2) sort
     a_sort = a[idx]
-    uniq, counts = np.unique(a_sort, return_counts=True)  # (3) unique, count
-    dt = uniq.dtype.descr
+    uni, cnts = np.unique(a_sort, return_counts=True)  # (3) unique, count
+    dt = uni.dtype.descr
     dt.append(('Count', '<i4'))
-    fr = np.empty_like(uniq, dtype=dt)
+    fr = np.empty_like(uni, dtype=dt)
     names = fr.dtype.names
-    vals = list(zip(*uniq)) + [counts.tolist()]  # (4) reassemble
+    vals = list(zip(*uni)) + [cnts.tolist()]  # (4) reassemble
     N = len(names)
     for i in range(N):
         fr[names[i]] = vals[i]
@@ -209,7 +223,7 @@ def _calc_stats(arr, axis=None, deci=4):
 
     Notes
     -----
-    see the args tuple for examples of nan functions
+    See the args tuple for examples of nan functions.
 
     >>> np.nansum(b, axis=0)   # by column
     >>> np.nansum(b, axis=1)   # by row
@@ -251,7 +265,7 @@ def _calc_stats(arr, axis=None, deci=4):
 
 
 def _numeric_fields_(a, fields):
-    """Determine numeric fields in a structured/recarray
+    """Determine numeric fields in a structured/recarray.
     """
     num_flds = []
     dt_names = a.dtype.names
@@ -280,32 +294,30 @@ def col_stats(a, fields=None, deci=2, verbose=False):
     Parameters
     ----------
     a : array
-        A structured/recarray
+        A structured/recarray.
     fields : list, string or None
-      - None,  checks all fields or assumes that the input array is a singleton
-      - string, a single field name, if the column names are known
-      - list,  a list of field names
+      - None, checks all fields or assumes that the input array is a singleton.
+      - String, a single field name, if the column names are known.
+      - List,  a list of field names.
     deci : integer
-        an attempt to format floats with deci(mal) places
+        An attempt to format floats with deci(mal) places.
 
     Requires
     --------
     _numeric_fields_ : function
-        returns the numeric fields in a structured/recarray
+        Returns the numeric fields in a structured/recarray.
     _calc_stats : function
-        performs the actual field calculations
+        Performs the actual field calculations.
     """
-    s_lst = []
     if isinstance(fields, str):
         fields = [fields]
     num_flds = _numeric_fields_(a, fields)
     # ---- made it thus far
     if len(num_flds) == 0:
         num_flds = ['array']
-        s_lst.append(_calc_stats(a.ravel(), axis=None, deci=deci))
+        s_lst = [_calc_stats(a.ravel(), axis=None, deci=deci)]
     else:
-        for fld in num_flds:
-            s_lst.append(_calc_stats(a[fld], deci=deci))
+        s_lst = [_calc_stats(a[fld], deci=deci) for fld in num_flds]
     #
     dts = [('Statistic', 'U10')] + [(i, '<f8') for i in num_flds]
     col_names = np.array(['N (size)', 'n (nans)', 'sum', 'min', 'max', 'mean',
@@ -329,10 +341,10 @@ def group_stats(a, case_fld=None, num_flds=None, deci=2, verbose=False):
     Parameters
     ----------
     a : structured/recarray
-        Make sure that you know the field names in advance
+        Make sure that you know the field names in advance.
     case_fld : string, list
-        String,  summarized by the unique values in the case_fld.
-        List, to further fine-tune the selection or crosstabulation
+        String, summarized by the unique values in the case_fld.
+        List, to further fine-tune the selection or crosstabulation.
     num_flds : string, list
         You can limit the input fields accordingly, if you only need a few
         know numeric fields.
@@ -344,7 +356,6 @@ def group_stats(a, case_fld=None, num_flds=None, deci=2, verbose=False):
           returns the numeric fields in a structured/recarray
       : _calc_stats : function
           performs the actual field calculations
-
     """
     results = []
     uniq, counts = np.unique(a[case_fld], return_counts=True)
@@ -362,6 +373,244 @@ def group_stats(a, case_fld=None, num_flds=None, deci=2, verbose=False):
         else:
             print("\nToo few cases... ({}) for a[{}]...".format(counts[i], u))
     return results
+
+
+def find_a_in_b(a, b, a_fields=None, b_fields=None):
+    """Find the indices of the elements in a smaller 2d array contained in
+    a larger 2d array. If the arrays are stuctured with field names,then these
+    need to be specified.  It should go without saying that the dtypes need to
+    be the same.
+
+    Parameters
+    ----------
+    a, b : 1D or 2D, ndarray or structured/record arrays
+        The arrays are arranged so that `a` is the smallest and `b` is the
+        largest.  If the arrays are stuctured with field names, then these
+        need to be specified.  It should go without saying that the dtypes
+        need to be the same.
+    a_fields, b_fields : list of field names
+        If the dtype has names, specify these in a list.  Both do not need
+        names.
+
+    Examples
+    --------
+    To demonstrate, a small array was made from the last 10 records of a larger
+    array to check that they could be found.
+
+    >>> a.dtype # ([('ID', '<i4'), ('X', '<f8'), ('Y', '<f8'), ('Z', '<f8')])
+    >>> b.dtype # ([('X', '<f8'), ('Y', '<f8')])
+    >>> a.shape, b.shape # ((69688,), (10,))
+    >>> find_a_in_b(a, b, flds, flds)
+    array([69678, 69679, 69680, 69681, 69682,
+           69683, 69684, 69685, 69686, 69687], dtype=int64)
+
+    References
+    ----------
+    This is a function from the arraytools.tbl module.
+
+    `<https://stackoverflow.com/questions/38674027/find-the-row-indexes-of-
+    several-values-in-a-numpy-array/38674038#38674038>`_.
+    """
+    def _view_(a):
+        """from the same name in arraytools"""
+        return a.view((a.dtype[0], len(a.dtype.names)))
+    #
+    small, big = [a, b]
+    if a.size > b.size:
+        small, big = [b, a]
+    if a_fields is not None:
+        small = small[a_fields]
+        small = _view_(small)
+    if b_fields is not None:
+        big = big[b_fields]
+        big = _view_(big)
+    if a.ndim >= 1:  # last slice, if  [:2] instead, it returns both indices
+        indices = np.where((big == small[:, None]).all(-1))[1]
+    return indices
+
+
+def find_in(a, col, what, where='in', any_case=True, pull='all'):
+    """Query a recarray/structured array for values
+
+    Parameters
+    ----------
+    a : recarray/structured array
+        Only text columns can be queried
+    col : column/field to query
+        Only 1 field can be queried at a time for the condition.
+    what : string or number
+        The query.  If a number, the field is temporarily converted to a
+        text representation for the query.
+    where : string
+        s, i, eq, en  st(arts with), in, eq(ual), en(ds with)
+    any_case : boolean
+        True, will find records regardless of ``case``, applies to text fields
+    extract : text or list
+        - `all`,  extracts all records where the column case is found
+        - `list`, extracts the records for only those fields in the list
+    Example
+    -------
+    >>> find_text(a, col=`FULLNAME`, what=`ABBEY`, pull=a.dtype.names[:2])
+    """
+    # ---- error checking section ----
+    e0 = """
+    Query error: You provided...
+    dtype: {}  col: {} what: {}  where: {}  any_case: {}  extract: {}
+    Required...\n{}
+    """
+    if a is None:
+        return a
+    err1 = "\nField not found:\nQuery fields: {}\nArray fields: {}"
+    errors = [a.dtype.names is None,
+              col is None, what is None,
+              where.lower()[:2] not in ('en', 'eq', 'in', 'st'),
+              col not in a.dtype.names]
+    if sum(errors) > 0:
+        arg = [a.dtype.kind, col, what, where, any_case, pull, find_in.__doc__]
+        print(dedent(e0).format(*arg))
+        return None
+    if isinstance(pull, (list, tuple)):
+        names = a.dtype.names
+        r = [i in names for i in pull]
+        if sum(r) != len(r):
+            print(err1.format(pull, names))
+            return None
+    # ---- query section
+    # convert column values and query to lowercase, if text, then query
+    c = a[col]
+    if c.dtype.kind in ('i', 'f', 'c'):
+        c = c.astype('U')
+        what = str(what)
+    elif any_case:
+        c = np.char.lower(c)
+        what = what.lower()
+    where = where.lower()[0]
+    if where == 'i':
+        q = np.char.find(c, what) >= 0   # ---- is in query ----
+    elif where == 's':
+        q = np.char.startswith(c, what)  # ---- startswith query ----
+    elif where == 'eq':
+        q = np.char.equal(c, what)
+    elif where == 'en':
+        q = np.char.endswith(c, what)    # ---- endswith query ----
+    if q.sum() == 0:
+        print("none found")
+        return None
+    if pull == 'all':
+        return a[q]
+    pull = np.unique([col] + list(pull))
+    return a[q][pull]
+
+
+def group_sort(a, group_fld, sort_fld, ascend=True):
+    """Group records in an structured array and sort on the sort_field.  The
+    order of the grouping field will be in ascending order, but the order of
+    the sort_fld can sort internally within the group.
+
+    Parameters
+    ----------
+    a : structured/recarray
+        Array must have field names to enable splitting on and sorting by
+    group_fld : text
+        The field/name in the dtype used to identify groupings of features
+    sort_fld : text
+        As above, but this field contains the numeric values that you want to
+        sort by.
+    ascend : boolean
+        **True**, sorts in ascending order, so you can slice for the lowest
+        `num` records. **False**, sorts in descending order if you want to
+        slice the top `num` records
+
+    Example
+    -------
+    >>> fn = "C:/Git_Dan/arraytools/Data/pnts_in_poly.npy"
+    >>> a = np.load(fn)
+    >>> out = _split_sort_slice_(a, split_fld='Grid_codes', val_fld='Norm')
+    >>> arcpy.da.NumPyArrayToFeatureClass(out, out_fc, ['Xs', 'Ys'], '2951')
+
+    References
+    ----------
+    `<https://community.esri.com/blogs/dan_patterson/2019/01/29/split-sort-
+    slice-the-top-x-in-y>`_.
+
+    `<https://community.esri.com/thread/227915-how-to-extract-top-five-max-
+    points>`_
+    """
+    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=sort_fld)
+    final = []
+    if ascend:
+        for r in ordered:
+            final.extend(r)
+    else:
+        for r in ordered:
+            r = r[::-1]
+            final.extend(r)
+    return np.asarray(final)
+
+
+def n_largest_vals(a, group_fld=None, val_fld=None, num=1):
+    """Run `split_sort_slice` to get the N largest values in the array.
+    """
+    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=val_fld)
+    final = []
+    for r in ordered:
+        r = r[::-1]
+        num = min(num, r.size)
+        final.extend(r[:num])
+    return np.asarray(final)
+
+
+def n_smallest_vals(a, group_fld=None, val_fld=None, num=1):
+    """Run `split_sort_slice` to get the N smallest values in the array.
+    """
+    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=val_fld)
+    final = []
+    for r in ordered:
+        num = min(num, r.size)
+        final.extend(r[:num])
+    return np.asarray(final)
+
+
+def _split_sort_slice_(a, split_fld=None, order_fld=None):
+    """Split a structured array into groups of common values based on the
+    split_fld, key field.  Once the array is split, the array is sorted on a
+    val_fld and sliced for the largest or smallest `num` records.
+
+    See Also
+    --------
+    Documentation is shown in `group_sort`
+
+    """
+    def _split_(a, fld):
+        """split unsorted array"""
+        out = []
+        uni, _ = np.unique(a[fld], True)
+        for _, j in enumerate(uni):
+            key = (a[fld] == j)
+            out.append(a[key])
+        return out
+    #
+    err_0 = """
+    A structured/recarray with a split_field and a order_fld is required.
+    You provided\n    array type  : {}"""
+    err_1 = """
+    split_field : {}
+    order field : {}
+    """
+    if a.dtype.names is None:
+        print(err_0.format(type(a)))
+        return a
+    check = sum([i in a.dtype.names for i in [split_fld, order_fld]])
+    if check != 2:
+        print((err_0 + err_1).format(type(a), split_fld, order_fld))
+        return a
+    #
+    subs = _split_(a, split_fld)
+    ordered = []
+    for _, sub in enumerate(subs):
+        r = sub[np.argsort(sub, order=order_fld)]
+        ordered.append(r)
+    return ordered
 
 
 # ==== Processing finished ====
