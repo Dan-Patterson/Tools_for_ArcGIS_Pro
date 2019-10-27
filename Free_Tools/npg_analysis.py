@@ -31,6 +31,8 @@ Derived from arraytools ``convex_hull, mst, near, n_spaced``
 # import sys
 from textwrap import dedent
 import numpy as np
+from numpy.lib.recfunctions import unstructured_to_structured as uts
+from numpy.lib.recfunctions import repack_fields
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -38,9 +40,11 @@ np.set_printoptions(edgeitems=5, linewidth=120, precision=2, suppress=True,
                     threshold=100, formatter=ft)
 np.ma.masked_print_option.set_display('-')  # change to a single -
 
-__all__ = ['closest_n', 'distances', 'not_closer', 'n_check', 'n_near',
-           'n_spaced', 'intersects', 'knn', 'knn0', '_dist_arr_', '_e_dist_',
-           'mst', 'connect', 'concave']
+__all__ = [
+        'closest_n', 'distances', 'not_closer', 'n_check', 'n_near',
+        'n_spaced', 'intersects', 'intersection_pnt', 'knn', 'knn0',
+        '_dist_arr_', '_e_dist_', 'mst', 'connect', 'concave'
+        ]
 
 
 # ===========================================================================
@@ -85,7 +89,7 @@ def not_closer(a, min_d=1, ordered=False):
     diff = b - a
     d = np.einsum('ijk,ijk->ij', diff, diff)
     d = np.sqrt(d).squeeze()
-    c = ~(np.triu(d <= min_d, 1)).any(0)
+    c = ~np.triu(d <= min_d, 1).any(0)
     b = a[c]
     return b, c, d
 
@@ -197,7 +201,7 @@ def n_spaced(L=0, B=0, R=10, T=10, min_space=1, num=10, verbose=True):
         diff = b - a
         dist = np.einsum('ijk,ijk->ij', diff, diff)
         dist_arr = np.sqrt(dist).squeeze()
-        case = ~(np.triu(dist_arr <= min_space, 1)).any(0)
+        case = ~np.triu(dist_arr <= min_space, 1).any(0)
         return a[case]
     #
     cnt = 1
@@ -208,7 +212,7 @@ def n_spaced(L=0, B=0, R=10, T=10, min_space=1, num=10, verbose=True):
     while (result < num) and (cnt < 6):  # keep using random points
         a = _pnts(L, B, R, T, num)
         if cnt > 1:
-            a = np.vstack((a0, a))
+            a = np.concatenate((a0, a), axis=0)  # np.vstack((a0, a))
         a0 = _not_closer(a, min_space)
         result = len(a0)
         if verbose:
@@ -249,38 +253,61 @@ def intersects(*args):
     else:
         raise AttributeError("Pass 2, 2-pnt lines or 4 points to the function")
     #
-    # ---- First check ----   np.cross(p1-p0, p3-p2 )
-    x0, y0, x1, y1, x2, y2, x3, y3 = *p0, *p1, *p2, *p3  # points to xs and ys
+    # ---- First check
+    # Given 4 points, if there are < 4 unique, then the segments intersect
+    u, cnts = np.unique((p0, p1, p2, p3), return_counts=True, axis=0)
+    if len(u) < 4:
+        intersection_pnt = u[cnts > 1]
+        return True, intersection_pnt
+
+    s10_x = p1[0] - p0[0]
+    s10_y = p1[1] - p0[1]
+    s32_x = p3[0] - p2[0]
+    s32_y = p3[1] - p2[1]
+    s02_x = p0[0] - p2[0]
+    s02_y = p0[1] - p2[1]
     #
-    # ---- First check ----   np.cross(p1-p0, p3-p2 )
-    denom = (x1 - x0) * (y3 - y2) - (x3 - x2) * (y1 - y0)
-    if denom == 0.0:
-        return False
+    # ---- Second check ----   np.cross(p1-p0, p3-p2)
+    denom = (s10_x * s32_y - s32_x * s10_y).item()
+    if denom == 0.0:  # collinear
+        return False, None
     #
-    # ---- Second check ----  np.cross(p1-p0, p0-p2 )
-    denom_gt0 = denom > 0  # denominator greater than zero
+    # ---- Third check ----  np.cross(p1-p0, p0-p2)
+    positive_denom = denom > 0.0  # denominator greater than zero
+    s_numer = (s10_x * s02_y - s10_y * s02_x).item()
+#    if (s_numer < 0) == positive_denom:
+#        return False
     #
-    s_numer = (x1 - x0) * (y0 - y2) - (y1 - y0) * (x0 - x2)
-    if (s_numer < 0) == denom_gt0:
-        return False
+    # ---- Fourth check ----  np.cross(p3-p2, p0-p2)
+    t_numer = s32_x * s02_y - s32_y * s02_x
+#    if (t_numer < 0) == positive_denom:
+#        return False
     #
-    # ---- Third check ----  np.cross(p3-p2, p0-p2)
-    t_numer = (x3 - x2) * (y0 - y2) - (y3 - y2) * (x0 - x2)
-    if (t_numer < 0) == denom_gt0:
-        return False
-    #
-    if ((s_numer > denom) == denom_gt0) or ((t_numer > denom) == denom_gt0):
-        return False
+    if ((s_numer > denom) == positive_denom) or \
+       ((t_numer > denom) == positive_denom):
+        return False, None
     #
     # ---- check to see if the intersection point is one of the input points
     # substitute p0 in the equation  These are the intersection points
     t = t_numer / denom
-    x = x0 + t * (x1 - x0)
-    y = y0 + t * (y1 - y0)
-    # be careful that you are comparing tuples to tuples, lists to lists
-    if sum([(x, y) == tuple(i) for i in [p0, p1, p2, p3]]) > 0:
-        return False
-    return True
+    intersection_point = [p0[0] + (t * s10_x), p0[1] + (t * s10_y)]
+    return True, intersection_point
+
+
+def intersection_pnt(p0, p1, p2, p3):
+    """Returns the intersection point of a polygon segment (p0->p1) and a
+    clipping polygon segment (s->e.
+
+    `<https://en.wikipedia.org/wiki/Line–line_intersection>`_.
+    """
+    x0, y0, x1, y1, x2, y2, x3, y3 = (*p0, *p1, *p2, *p3)
+    dc_x, dc_y = p2 - p3
+    dp_x, dp_y = p0 - p1
+    n1 = x2 * y3 - y2 * x3
+    n2 = x0 * y1 - y0 * x1
+    n3 = 1.0 / (dc_x * dp_y - dc_y * dp_x)
+    arr = np.array([(n1 * dp_x - n2 * dc_x), (n1 * dp_y - n2 * dc_y)])
+    return arr * n3
 
 
 def knn(p, pnts, k=1, return_dist=True):
@@ -376,7 +403,7 @@ def _e_dist_(a):
     return d
 
 
-def mst(W, calc_dist=True):
+def mst(arr, calc_dist=True):
     """Determine the minimum spanning tree for a set of points represented
     by their inter-point distances. ie their `W`eights
 
@@ -395,7 +422,9 @@ def mst(W, calc_dist=True):
     -------
     pairs - the pair of nodes that form the edges
     """
-    W = W[~np.isnan(W[:, 0])]
+    arr = np.unique(arr, True, False, False, axis=0)[0]
+    W = arr[~np.isnan(arr[:, 0])]
+    a_copy = np.copy(W)
     if calc_dist:
         W = _e_dist_(W)
     if W.shape[0] != W.shape[1]:
@@ -417,7 +446,12 @@ def mst(W, calc_dist=True):
         W[pnts_seen, new_edge[1]] = np.inf
         W[new_edge[1], pnts_seen] = np.inf
         n_seen += 1
-    return np.vstack(pairs)
+    pairs = np.array(pairs)
+    frum = a_copy[pairs[:, 0]]
+    too = a_copy[pairs[:, 1]]
+    fr_to = np.concatenate((frum, too), axis=1)  # np.vstack(pairs)
+    fr_to = uts(fr_to, names=['X_orig', 'Y_orig', 'X_dest', 'Y_dest'])
+    return repack_fields(fr_to)
 
 
 def connect(a, dist_arr, edges):
@@ -486,7 +520,7 @@ def concave(points, k, pip_check=False):
         return a0
 
     def _point_in_polygon_(pnt, poly):  # pnt_in_poly(pnt, poly):  #
-        """Point is in polygon. ## fix this and use pip from arraytools
+        """Point in polygon check. ## fix this and use pip from arraytools
         """
         x, y = pnt
         N = len(poly)
@@ -512,7 +546,7 @@ def concave(points, k, pip_check=False):
         del pts
     if len(p_set) < 3:
         raise Exception("p_set length cannot be smaller than 3")
-    elif len(p_set) == 3:
+    if len(p_set) == 3:
         return p_set  # Points are a polygon already
     k = min(k, len(p_set) - 1)  # Make sure k neighbours can be found
     frst_p = cur_p = min(p_set, key=lambda x: x[1])
@@ -520,7 +554,7 @@ def concave(points, k, pip_check=False):
     p_set.remove(frst_p)  # Remove first point from p_set
     prev_ang = 0
     # ----
-    while (cur_p != frst_p or len(hull) == 1) and len(p_set) > 0:
+    while (cur_p != frst_p or len(hull) == 1) and len(p_set) != 0:
         if len(hull) == 3:
             p_set.append(frst_p)          # Add first point again
         knn_pnts = knn0(p_set, cur_p, k)  # Find nearest neighbours

@@ -44,27 +44,27 @@ References
 # pylint: disable=R1710  # inconsistent-return-statements
 # pylint: disable=W0105  # string statement has no effect
 # pylint: disable=W0621  # redefining name
-# pylint: disable=W0621  # redefining name
+
 import sys
 from textwrap import dedent, indent
 import json
-
 import numpy as np
 from numpy.lib.recfunctions import structured_to_unstructured as stu
 from numpy.lib.recfunctions import unstructured_to_structured as uts
-
-from npGeo import Geo
-
-import arcpy
+from npGeo import *
+import arcpy.da
 
 
 __all__ = [
-    'poly2array', 'load_geojson',   # shape to array and conversion
-    'arrays_to_Geo', 'Geo_to_arrays', 'array_ift',
-    '_make_nulls_', 'getSR', 'fc_composition',       # featureclass methods
-    'fc_data', 'fc_geometry', 'fc_shapes', 'getSR', 'shape_to_K',
+    'poly2array',   # shape to array and conversion
+    'load_geojson', 'geojson_Geo', 'fc_json',
+    'arrays_to_Geo', 'Geo_to_arrays',
+    'array_ift',
+    '_make_nulls_', 'getSR', 'shape_K', 'fc_composition',
+    'fc_data', 'fc_geometry', 'fc_shapes',
     'array_poly', 'geometry_fc',                     # convert back to fc
-    'prn_q', '_check', 'prn_tbl', 'prn_geo'          # printing
+    'prn_q', '_check', 'prn_tbl', 'prn_geo',
+    'shape_properties', 'flatten_to_points'
     ]
 
 # ---- Constants -------------------------------------------------------------
@@ -185,7 +185,7 @@ def geojson_Geo(pth, kind=2):
     """
     coords = load_geojson(pth)
     a_2d, IFT = array_ift(coords)
-    a_2d = np.vstack(a_2d)
+    a_2d = np.concatenate(a_2d, axis=0)  # np.vstack(a_2d)
     return Geo(a_2d, IFT, kind)
 
 
@@ -247,19 +247,17 @@ def Geo_to_arrays(in_geo):
 #  or from the output of load_geojson
 #
 def array_ift(in_arrays):
-    """Produce a 2D array stack and a I(d) F(rom) T(o) list of the coordinate
-    pairs in the resultant.
+    """Produce a 2D array stack of x,y points and an I(d) F(rom) T(o) list of
+    the coordinate pairs in the resultant.
 
     Parameters
     ----------
     in_arrays : list, array
-        ``in_arrays`` can be created by adding existing 2D arrays to the list
-         or produced from the conversion of poly features to arrays using
-        ``poly2arrays``.
+        The input data as a list of lists or arrays or an array.
 
     Notes
     -----
-    Called by ``npGeo_io.arrays_to_Geo``.
+    Called by ``npgeo_io.arrays_to_Geo``.
     Use ``fc_geometry`` to produce ``Geo`` objects directly from arcgis pro
     featureclasses.
     """
@@ -272,6 +270,7 @@ def array_ift(in_arrays):
     for cnt, p in enumerate(in_arrays):
         p = np.asarray(p)
         kind = p.dtype.kind
+        # print("id {} kind {}".format(cnt, kind))
         if kind == 'O':
             bits = []
             for j in p:
@@ -279,9 +278,9 @@ def array_ift(in_arrays):
                     bits.append(np.asarray(i))
                     bits.append(null_pnt)
                 bits = bits[:-1]
-                stack = np.vstack(bits)
-                id_too.append([cnt, len(stack)])
-            sub = stack
+                sub = np.concatenate(bits, axis=0)  # np.vstack(bits)
+                id_too.append([cnt, len(sub)])
+            # sub = stack
         elif kind in NUMS:
             sub = []
             if len(p.shape) == 2:
@@ -290,9 +289,9 @@ def array_ift(in_arrays):
             elif len(p.shape) == 3:
                 id_too.extend([[cnt, len(k)] for k in p])
                 sub.append([np.asarray(j) for i in p for j in i])
-        subs = np.vstack(sub)
+        subs = np.concatenate(sub, axis=0)  # np.vstack(sub)
         a_2d.append(subs)
-    a_2d = np.vstack(a_2d)
+    a_2d = np.concatenate(a_2d, axis=0)  # np.vstack(a_2d)
     id_too = np.array(id_too)
     ids = id_too[:, 0]
     too = np.cumsum(id_too[:, 1])
@@ -355,16 +354,16 @@ def getSR(in_fc, verbose=False):
     return SR
 
 
-def shape_to_K(in_fc):
-    """The shape type represented by the featureclass"""
+def shape_K(in_fc):
+    """The shape type represented by the featureclass.  Returns (kind, k)"""
     desc = arcpy.da.Describe(in_fc)
-    s = desc['shapeType']
-    if s == 'Polygon':
-        return 2
-    if s == 'Polyline':
-        return 1
-    if s in ('Point', 'Multipoint'):
-        return 0
+    kind = desc['shapeType']
+    if kind in ('Polygon', 'PolygonM', 'PolygonZ'):
+        return (kind, 2)
+    if kind == ('Polyline', 'PolylineM', 'PolylineZ'):
+        return (kind, 1)
+    if kind in ('Point', 'Multipoint'):
+        return (kind, 0)
 
 
 def fc_composition(in_fc, SR=None, prn=True, start=0, end=50):
@@ -386,7 +385,7 @@ def fc_composition(in_fc, SR=None, prn=True, start=0, end=50):
             too = np.cumsum(num_pnts)
             result = np.stack((IDs, part_count, num_pnts, too), axis=-1)
             len_lst.append(result)
-    tmp = np.vstack(len_lst)
+    tmp = np.concatenate(len_lst, axis=0)  # np.vstack(len_lst)
     too = np.cumsum(tmp[:, 2])
     frum = np.concatenate(([0], too))
     frum_too = np.array(list(zip(frum, too)))
@@ -430,7 +429,7 @@ def fc_data(in_fc):
     Parameters
     ----------
     in_fc : text
-        Path to the input featureclass
+        Path to the input featureclass.
 
     Notes
     -----
@@ -444,10 +443,46 @@ def fc_data(in_fc):
     if fld_names[0] == 'OID@':
         out_flds = flds + fld_names[1:]
         new_names = ['OID_', 'X_cent', 'Y_cent'] + out_flds[3:]
-    a = arcpy.da.FeatureClassToNumPyArray(in_fc, out_flds, skip_nulls=False,
-                                          null_value=null_dict)
+    a = arcpy.da.FeatureClassToNumPyArray(
+            in_fc, out_flds, skip_nulls=False, null_value=null_dict
+            )
     a.dtype.names = new_names
     return np.asarray(a)
+
+
+def _convert_polytypes_(in_fc, SR):
+    """A standalone version of _polytypes_ in fc_geometry.
+    Convert polylines/polygons geometry to array.
+
+    >>> cur = arcpy.da.SearchCursor( in_fc, ('OID@', 'SHAPE@'), None, SR)
+    >>> ids = [r[0] for r in cur]
+    >>> arrs = [[j for j in r[1]] for r in cur]
+    """
+    # ----
+    null_pnt = (np.nan, np.nan)
+    id_len = []
+    a_2d = []
+    with arcpy.da.SearchCursor(in_fc, ('OID@', 'SHAPE@'), None, SR) as cursor:
+        for row in cursor:
+            sub = []
+            IDs = []
+            num_pnts = []
+            p_id = row[0]
+            geom = row[1]
+            prt_cnt = geom.partCount
+            for arr in geom:
+                pnts = [[pt.X, pt.Y] if pt else null_pnt for pt in arr]
+                sub.append(np.asarray(pnts))
+                IDs.append(p_id)
+                num_pnts.append(len(pnts))
+            part_count = np.arange(prt_cnt)
+            result = np.stack((IDs, part_count, num_pnts), axis=-1)
+            id_len.append(result)
+            a_2d.extend([j for i in sub for j in i])
+    # ----
+    id_len = np.concatenate(id_len, axis=0)
+    a_2d = np.asarray(a_2d)
+    return id_len, a_2d
 
 
 def fc_geometry(in_fc, SR=None, IFT_rec=False, true_curves=False, deg=5):
@@ -710,13 +745,12 @@ def geometry_fc(a, IFT, p_type=None, gdb=None, fname=None, sr=None):
         for row in out:
             cur.insertRow(row)
     arcpy.management.CopyFeatures(fname, name)
-    return "geometry_fc complete"
+    return
+
 
 #
 # ============================================================================
 # ---- array dependent
-
-
 def prn_q(a, edges=3, max_lines=25, width=120, decimals=2):
     """Format a structured array by setting the width so it hopefully wraps.
     """
@@ -1009,11 +1043,11 @@ def flatten_to_points(iterable):
                 del stack[-2:]
 
     # ----
-    z = gen(iterable)
-    dt = np.dtype({'names': ['Xs', 'Ys', 'a', 'b', 'c', 'd'],
-                   'formats': ['<f8', '<f8', '<i4', '<i4', '<i4', '<i4']})
-    z0 = np.vstack(list(z))
-    return uts(z0, dtype=dt)
+    z = list(gen(iterable))
+    # dt = np.dtype({'names': ['Xs', 'Ys', 'a', 'b', 'c', 'd'],
+    #                'formats': ['<f8', '<f8', '<i4', '<i4', '<i4', '<i4']})
+    # z0 = np.vstack(list(z))
+    return z  # uts(z0, dtype=dt)
 
 
 # ===========================================================================

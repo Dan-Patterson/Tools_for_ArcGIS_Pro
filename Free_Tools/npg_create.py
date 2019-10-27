@@ -435,9 +435,9 @@ def triangle(dx=1, dy=1, cols=1, rows=1):
     Parameters
     ----------
     dx : number
-        Increment in x direction, +ve moves west to east, left/right.
+        Increment/width in x direction, +ve moves west to east, left/right.
     dy : number
-        Increment in y direction, -ve moves north to south, top/bottom.
+        Increment/height in y direction, -ve moves north to south, top/bottom.
     rows, cols : ints
         The number of rows and columns to produce.
     """

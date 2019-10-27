@@ -11,7 +11,7 @@ Author :
     Dan_Patterson@carleton.ca
 
 Modified :
-    2019-09-06
+    2019-10-16
 
 Purpose :
     Tools for working with tabular data in the Geo class.
@@ -30,8 +30,8 @@ from numpy.lib.recfunctions import structured_to_unstructured as stu
 # from numpy.lib.recfunctions import unstructured_to_structured as uts
 # from numpy.lib.recfunctions import _keep_fields
 
-from npgeom import npg_io
-from npg_io import prn_tbl
+import npg_io
+# from npg_io import prn_tbl
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -43,8 +43,12 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 
 script = sys.argv[0]  # print this should you need to locate the script
 
-__all__ = ['crosstab_tbl', 'crosstab_rc', 'crosstab_array', 'col_stats',
-           'group_stats']
+__all__ = [
+    '_as_pivot', 'crosstab_tbl', 'crosstab_rc', 'crosstab_array',
+    'calc_stats', 'numeric_fields', 'col_stats',
+    'group_stats', 'find_a_in_b', 'find_in', 'group_sort',
+    'n_largest_vals', 'n_smallest_vals', 'split_sort_slice'
+    ]
 
 
 def _view_(a):
@@ -63,7 +67,7 @@ def _view_(a):
 
 # ==== Crosstabulation tools =================================================
 # ---- fancy print/string formatter for crosstabulation and pivot
-def _prn(r, c, a, stat_name='Count'):
+def _prn(r, c, a, stat_name='Total'):
     """Fancy print formatting.
     """
     r = r.tolist()
@@ -82,7 +86,7 @@ def _prn(r, c, a, stat_name='Count'):
     return result
 
 
-def _as_pivot_(a):
+def _as_pivot(a):
     """Used by ``crosstab_tbl``. Present results in pivot table format."""
     if a.dtype.fields is None:
         print("\n...\nStructured array with field names is required")
@@ -140,7 +144,7 @@ def crosstab_tbl(in_tbl, flds=None, as_pivot=True):
     uni, idx, cnts = np.unique(a[flds], True, False, True)
     out_arr = append_fields(uni, "Counts", cnts, usemask=False)
     if as_pivot:
-        return _as_pivot_(out_arr)
+        return _as_pivot(out_arr)
     return out_arr
 
 
@@ -217,7 +221,7 @@ def crosstab_array(a, flds=None):
 
 # ==== Summarize tools ======================================================
 # (4) pivot table from 3 numpy ndarrays
-def _calc_stats(arr, axis=None, deci=4):
+def calc_stats(arr, axis=None, deci=4):
     """Calculate stats for an array of number types, with nodata (nan, None)
     in the column.
 
@@ -264,7 +268,7 @@ def _calc_stats(arr, axis=None, deci=4):
     return s
 
 
-def _numeric_fields_(a, fields):
+def numeric_fields(a, fields):
     """Determine numeric fields in a structured/recarray.
     """
     num_flds = []
@@ -311,13 +315,13 @@ def col_stats(a, fields=None, deci=2, verbose=False):
     """
     if isinstance(fields, str):
         fields = [fields]
-    num_flds = _numeric_fields_(a, fields)
+    num_flds = numeric_fields(a, fields)
     # ---- made it thus far
     if len(num_flds) == 0:
         num_flds = ['array']
-        s_lst = [_calc_stats(a.ravel(), axis=None, deci=deci)]
+        s_lst = [calc_stats(a.ravel(), axis=None, deci=deci)]
     else:
-        s_lst = [_calc_stats(a[fld], deci=deci) for fld in num_flds]
+        s_lst = [calc_stats(a[fld], deci=deci) for fld in num_flds]
     #
     dts = [('Statistic', 'U10')] + [(i, '<f8') for i in num_flds]
     col_names = np.array(['N (size)', 'n (nans)', 'sum', 'min', 'max', 'mean',
@@ -331,7 +335,7 @@ def col_stats(a, fields=None, deci=2, verbose=False):
     if verbose:
         args = ["="*25, "Numeric fields"]
         print("\n{}\nStatistics for... a\n{!s:>32}".format(*args))
-        prn_tbl(z)
+        npg_io.prn_tbl(z)
     return z
 
 
@@ -368,7 +372,7 @@ def group_stats(a, case_fld=None, num_flds=None, deci=2, verbose=False):
             if verbose:
                 args = ["="*25, u, "Numeric fields"]
                 print("\n{}\nStatistics for... a[{}]\n{!s:>32}".format(*args))
-                prn_tbl(z)
+                npg_io.prn_tbl(z)
             results.append([u, z])
         else:
             print("\nToo few cases... ({}) for a[{}]...".format(counts[i], u))
@@ -536,7 +540,7 @@ def group_sort(a, group_fld, sort_fld, ascend=True):
     `<https://community.esri.com/thread/227915-how-to-extract-top-five-max-
     points>`_
     """
-    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=sort_fld)
+    ordered = split_sort_slice(a, split_fld=group_fld, order_fld=sort_fld)
     final = []
     if ascend:
         for r in ordered:
@@ -551,7 +555,7 @@ def group_sort(a, group_fld, sort_fld, ascend=True):
 def n_largest_vals(a, group_fld=None, val_fld=None, num=1):
     """Run `split_sort_slice` to get the N largest values in the array.
     """
-    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=val_fld)
+    ordered = split_sort_slice(a, split_fld=group_fld, order_fld=val_fld)
     final = []
     for r in ordered:
         r = r[::-1]
@@ -563,7 +567,7 @@ def n_largest_vals(a, group_fld=None, val_fld=None, num=1):
 def n_smallest_vals(a, group_fld=None, val_fld=None, num=1):
     """Run `split_sort_slice` to get the N smallest values in the array.
     """
-    ordered = _split_sort_slice_(a, split_fld=group_fld, order_fld=val_fld)
+    ordered = split_sort_slice(a, split_fld=group_fld, order_fld=val_fld)
     final = []
     for r in ordered:
         num = min(num, r.size)
@@ -571,7 +575,7 @@ def n_smallest_vals(a, group_fld=None, val_fld=None, num=1):
     return np.asarray(final)
 
 
-def _split_sort_slice_(a, split_fld=None, order_fld=None):
+def split_sort_slice(a, split_fld=None, order_fld=None):
     """Split a structured array into groups of common values based on the
     split_fld, key field.  Once the array is split, the array is sorted on a
     val_fld and sliced for the largest or smallest `num` records.
