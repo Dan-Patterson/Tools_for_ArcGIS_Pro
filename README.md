@@ -1,6 +1,12 @@
 
 ## __**Tools for ArcGIS Pro**__
 
+**NOTE**
+
+The main testing repository for this package is *npgeom* on the main landing page.  I move finished materials here when I have completed updates or additions to it.
+
+----
+
 ### **Free tools**
 
 Free tools are sample tools that use numpy and arcpy to implement tools that normally require a Standard or Advanced ArcGIS Pro license.
