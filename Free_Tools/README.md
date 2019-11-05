@@ -1,6 +1,6 @@
 ## Free the tools ##
 
-Developed in ArcGIS Pro 2.4, python 3.6.8 and numpy 1.16.4.
+Developed in ArcGIS Pro 2.4, 2.5 beta, python 3.6.8/9 and numpy 1.16.5/1.17.2.
 
 These demo scripts and the toolbox show how numpy and arcpy can play nice together and generate geometries that are normally only available at the ArcGIS Pro Advanced level.  The tools are already provided to do this, but less attention is paid to the attributes.  Usually a spatial and/or attribute join enables one to bring the attributes from the input class to the output class.  This can be done after the geometry is created, or I may have done so during script construction (depending on how bored I was).
 
