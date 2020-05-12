@@ -1,6 +1,7 @@
 
 ## __**Tools for ArcGIS Pro**__
 
+This folder contains various toolboxes for working with feature data in ArcGIS Pro.
 **NOTE**
 
 The main testing repository for this package is *npgeom* on the main landing page.  I move finished materials here when I have completed updates or additions to it.
@@ -58,9 +59,13 @@ A collection of tools directed towards work with poly* features.
 This folder is a collection of scripts which contain defs which can be used in other modules or specifically, they can be used in the field calculator in ArcGIS Pro or ArcMap.  The header contains useage information, and a python parser is assumed in all cases.  Check the respective help documentation on how to use the field calculator from within a table or the Calculate Field tool in Pro.
 
 -------------------------
-### **point_tools**
+### **PointTools**
 
-This folder contains a toolbox and associated script(s) for ArcGIS Pro to work with points.  Also found at
+**Update 2020-05-11**
+
+This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbox and associated script(s) for working with point features in ArcGIS Pro.
+
+This supercedes the version found at...
 http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
 
 *General blog posts*
