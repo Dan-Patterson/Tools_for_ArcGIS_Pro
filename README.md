@@ -90,7 +90,9 @@ https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-w
 (8)  Whatever else I forgot to mention.
 
 -------------------------
-### **table_tools**
+### **TableTools**
+
+**Update 2020-05-117**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
