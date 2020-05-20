@@ -2,6 +2,7 @@
 ## __**Tools for ArcGIS Pro**__
 
 This folder contains various toolboxes for working with feature data in ArcGIS Pro.
+
 **NOTE**
 
 The main testing repository for this package is *npgeom* on the main landing page.  I move finished materials here when I have completed updates or additions to it.
@@ -92,7 +93,7 @@ https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-w
 -------------------------
 ### **TableTools**
 
-**Update 2020-05-117**
+**Update 2020-05-17**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
