@@ -14,7 +14,11 @@ The main testing repository for this package is *npgeom* on the main landing pag
 ### **Free tools**
 
 Free tools are sample tools that use numpy and arcpy to implement tools that normally require a Standard or Advanced ArcGIS Pro license.
-It should be noted, that in some cases, the implementation is partial because either a full implementation couldn't be done or I didn't feel like it.  In any event, the principles of the tools should be available at the Basic license level... like Split Layer by Attribute ... which took about 15 years to do so.  The scripts can be examined for details.
+It should be noted, that in some cases, the implementation is partial because either a full implementation couldn't be done or I didn't feel like it.  In any event, the principles of the tools should be available at the Basic license level... like Split Layer by Attribute ... which took about 15 years to do so.  
+
+
+
+The script can be examined for details in thes old links as well.
 
 https://community.esri.com/blogs/dan_patterson/2019/06/24/free-tools-frequency-and-statistics
 
@@ -56,6 +60,9 @@ To use, all you need to do is download scripts folder and the toolbox and instal
 
 A collection of tools directed towards work with poly* features.
 
+https://community.esri.com/people/danretired/blog/2020/05/19/polygonpolyline-tools-for-pro
+https://community.esri.com/people/danretired/blog/2020/05/19/polygonpolyline-tools-for-pro
+
 -------------------------
 ### **field_calculator**
 
@@ -68,10 +75,13 @@ This folder is a collection of scripts which contain defs which can be used in o
 
 This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbox and associated script(s) for working with point features in ArcGIS Pro.
 
-This supercedes the version found at...
-http://www.arcgis.com/home/item.html?id=f96ede37dcd04c2e96dc903a4ce26244
+*Background*
+
+https://community.esri.com/people/danretired/blog/2020/05/15/point-tools-for-pro
+https://community.esri.com/people/danretired/blog/2020/05/15/point-tools-for-pro
 
 *General blog posts*
+
 https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-with-points
 
 
@@ -98,7 +108,9 @@ https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-w
 **Update 2020-05-17**
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
-http://www.arcgis.com/home/item.html?id=90d9ca933e8c4b96bf341a20ae1f2514
+
+https://community.esri.com/people/danretired/blog/2020/05/18/free-tools-for-arcgis-pro-table-tools
+https://community.esri.com/docs/DOC-14928-free-tools-for-arcgis-pro-table-tools
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
