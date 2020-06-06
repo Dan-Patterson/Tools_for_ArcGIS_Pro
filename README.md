@@ -61,7 +61,7 @@ To use, all you need to do is download scripts folder and the toolbox and instal
 A collection of tools directed towards work with poly* features.
 
 https://community.esri.com/people/danretired/blog/2020/05/19/polygonpolyline-tools-for-pro
-https://community.esri.com/people/danretired/blog/2020/05/19/polygonpolyline-tools-for-pro
+https://community.esri.com/docs/DOC-14930-free-tools-for-arcgis-pro-polygon-polyline-tools
 
 -------------------------
 ### **field_calculator**
@@ -78,7 +78,7 @@ This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbo
 *Background*
 
 https://community.esri.com/people/danretired/blog/2020/05/15/point-tools-for-pro
-https://community.esri.com/people/danretired/blog/2020/05/15/point-tools-for-pro
+https://community.esri.com/docs/DOC-14926-free-tools-for-arcgis-pro-point-tools
 
 *General blog posts*
 
