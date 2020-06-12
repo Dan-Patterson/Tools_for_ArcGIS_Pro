@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
+============
 densify_geom
 ============
 
@@ -7,7 +8,7 @@ Script  :   densify_geom.py
 
 Author  :   Dan.Patterson@carleton.ca
 
-Modified :  2018-09-12
+Modified :  2019-02-23
 
 Purpose :   Densify geometry by a factor.
 
@@ -235,3 +236,16 @@ if __name__ == "__main__":
     : - run the _demo
     """
 #    print("Script... {}".format(script))
+"""
+from scipy.interpolate import interp1d
+distance = np.cumsum(np.sqrt( np.ediff1d(x, to_begin=0)**2 + np.ediff1d(y, to_begin=0)**2 ))
+distance = distance/distance[-1]
+
+fx, fy = interp1d( distance, x ), interp1d( distance, y )
+
+alpha = np.linspace(0, 1, 15)  # 15 points between 0 and 1
+x_regular, y_regular = fx(alpha), fy(alpha)
+
+cumulative distance
+
+"""

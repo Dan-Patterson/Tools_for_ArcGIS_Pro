@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-script name here
-=======
+==============
+transect_lines
+==============
 
-Script :   template.py
+Script : template.py
 
-Author :   Dan_Patterson@carleton.ca
+Author : Dan_Patterson@carleton.ca
 
-Modified : 2019-
+Modified : 2019-02-23
 
-Purpose :  Tools for
+Purpose :  Tools for producing transect lines
 
 Notes:
 
@@ -202,8 +203,8 @@ if create_output:
     out_fc = tbl + "_t"
     arcpy.XYToLine_management(tbl, out_fc, 'X_from', 'Y_from', 'X_to', 'Y_to',
                               spatial_reference=SR)
-    ... #       startx_field, starty_field, endx_field, endy_field,
-    ... #       {line_type}, {id_field}, {spatial_reference}
+    #       startx_field, starty_field, endx_field, endy_field,
+    #       {line_type}, {id_field}, {spatial_reference}
 
 # ==== Processing finished ====
 # ===========================================================================

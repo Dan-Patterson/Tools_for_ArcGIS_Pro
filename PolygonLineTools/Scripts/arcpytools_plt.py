@@ -59,6 +59,7 @@ def _describe(in_fc=None):
     :  'spatialReference',  ...]
     """
     if in_fc is not None:
+        in_fc = r"C:\Git_Dan\npgeom\Project_npg\tests.gdb\sq"
         return arcpy.da.Describe(in_fc)
     else:
         return None
@@ -505,4 +506,5 @@ if __name__ == "__main__":
 #    _demo()
 #    gdb_fc = ['Data', 'point_tools.gdb', 'radial_pnts']
 #    in_fc = "/".join(script.split("/")[:-2] + gdb_fc)
+    in_fc = r"C:\Git_Dan\npgeom\Project_npg\tests.gdb\sq"
 #    result = fc_array(in_fc, flds="", allpnts=True)  # a, out_flds, SR

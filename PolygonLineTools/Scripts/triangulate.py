@@ -24,6 +24,7 @@ scipy.spatial.Delaunay.html>`_.
 
 import sys
 import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured as stu
 from scipy.spatial import Delaunay, Voronoi
 from arcpytools_plt import fc_info #, tweet  #, frmt_rec, _col_format
 import arcpy
@@ -126,7 +127,8 @@ def pnt_groups(in_fc):
     for k in keys:
         w = np.where(a['IDs'] == k)[0]
         z = a[['Xs', 'Ys']][w[0]:w[-1] + 1]
-        z = np.copy(z.view(np.float64).reshape(z.shape[0], 2))
+        z = stu(z)
+        #z = np.copy(z.view(np.float64).reshape(z.shape[0], 2))
         pts.append(z)
     return pts, a, SR
 
@@ -145,6 +147,7 @@ if len(sys.argv) == 1:
 #    arcpy.CopyFeatures_management(polys, "in_memory/temp")
 #    arcpy.analysis.Clip("in_memory/temp", in_fc, out_fc, None)
 else:
+    testing = False
     in_fc = sys.argv[1]
     out_fc = sys.argv[2]
 
