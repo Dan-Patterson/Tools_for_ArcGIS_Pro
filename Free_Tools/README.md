@@ -1,6 +1,6 @@
 ## Free the tools ##
 
-Developed in ArcGIS Pro 2.4, 2.5, python 3.6.8/9 and numpy 1.16.5/1.17.2/1.18.1.
+Developed in ArcGIS Pro 2.4-2.6, python 3.6-10 and numpy 1.16.5-1.18.5.
 
 These demo scripts and the toolbox show how numpy and arcpy can play nice together and generate geometries that are normally only available at the ArcGIS Pro Advanced level.  The tools are already provided to do this, but less attention is paid to the attributes.  Usually a spatial and/or attribute join enables one to bring the attributes from the input class to the output class.  This can be done after the geometry is created, or I may have done so during script construction (depending on how bored I was).
 
@@ -14,16 +14,19 @@ The toolbox and scripts allow one to determine:
 **Feature Envelope to Polygon**
 
 Using the Geo array class, the extent of polyline and polygon features are created from their constituent points.
+
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-envelope-to-polygon.htm
 
 **Convex hulls**
 
 Simple convex hull implementation in python, or scipy (feature points > than a threshold)
+
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/minimum-bounding-geometry.htm
 
 **Feature to Point**
 
 For polygon features.  Reduces the points to a representative centroid.
+
     https://pro.arcgis.com/en/pro-app/tool-reference/data-management/feature-to-point.htm
 
 **Split Line at Vertices**
@@ -53,7 +56,9 @@ Another container that has been around for a long time in a variety of formats a
 **Frequency**
 
 Another tool that should be free for such basic functionality.
+
     https://community.esri.com/blogs/dan_patterson/2016/03/03/create-classes-from-multiple-columns
+    
     https://pro.arcgis.com/en/pro-app/tool-reference/analysis/frequency.htm
 
 
