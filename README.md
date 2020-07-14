@@ -56,7 +56,7 @@ Toolboxes are contained in separate folders.  Each folder has a scripts folder c
 To use, all you need to do is download scripts folder and the toolbox and install in your working path or in a path accessible to all projects.
 
 -------------------------
-### **Polygon_line tools**
+### **[Polygon_line tools](/PolygonLineTools/README.md**
 
 A collection of tools directed towards work with poly* features.
 
@@ -69,7 +69,7 @@ https://community.esri.com/docs/DOC-14930-free-tools-for-arcgis-pro-polygon-poly
 This folder is a collection of scripts which contain defs which can be used in other modules or specifically, they can be used in the field calculator in ArcGIS Pro or ArcMap.  The header contains useage information, and a python parser is assumed in all cases.  Check the respective help documentation on how to use the field calculator from within a table or the Calculate Field tool in Pro.
 
 -------------------------
-### **[PointTools](PointTools/README.md)**
+### **[PointTools](/PointTools/README.md)**
 
 **Update 2020-05-11**
 
