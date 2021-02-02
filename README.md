@@ -18,25 +18,26 @@ It should be noted, that in some cases, the implementation is partial because ei
 
 The script can be examined for details in thes old links as well.
 
-https://community.esri.com/blogs/dan_patterson/2019/06/24/free-tools-frequency-and-statistics
+[Frequency and Statistics](https://community.esri.com/t5/python-blog/free-advanced-tools-frequency-and-statistics/ba-p/902835)
 
-https://community.esri.com/blogs/dan_patterson/2019/06/26/free-tools-feature-extent-to-poly-features
+[Feature extent to poly features](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-extent-to-poly-features/ba-p/893420)
 
-https://community.esri.com/blogs/dan_patterson/2019/07/26/free-tools-feature-to-point
+[Feature to points](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-to-point/ba-p/893553)
 
-https://community.esri.com/blogs/dan_patterson/2019/07/23/free-tools-convex-hulls
+[Convex hulls](https://community.esri.com/t5/python-blog/free-advanced-tools-convex-hulls/ba-p/893549)
 
-https://community.esri.com/blogs/dan_patterson/2019/08/08/free-tools-polygons-to-lines-or-segments
+[Polygons to lines or segments](https://community.esri.com/t5/python-blog/free-advanced-tools-polygons-to-lines-or-segments/ba-p/902811)
 
-https://community.esri.com/blogs/dan_patterson/2019/08/08/free-tools-bounding-circles
+[Minimum area bounding circles](https://community.esri.com/t5/python-blog/free-advanced-tools-bounding-circles/ba-p/902820)
 
 ----
 ### [**Polygon_line tools**](/PolygonLineTools/README.md)
 
 A collection of tools directed towards work with poly* features.
 
-https://community.esri.com/people/danretired/blog/2020/05/19/polygonpolyline-tools-for-pro
-https://community.esri.com/docs/DOC-14930-free-tools-for-arcgis-pro-polygon-polyline-tools
+[Polyline tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/polygon-polyline-tools-for-pro/ba-p/904067)
+
+[Polygon Polyline tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-polygon-polyline-tools/ta-p/917751)
 
 ----
 ### [**PointTools**](/PointTools/README.md)
@@ -52,8 +53,9 @@ This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbo
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 
-https://community.esri.com/people/danretired/blog/2020/05/18/free-tools-for-arcgis-pro-table-tools
-https://community.esri.com/docs/DOC-14928-free-tools-for-arcgis-pro-table-tools
+[Table tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/table-tools-for-pro/ba-p/904042)
+
+[Table tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-table-tools/ta-p/916415)
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
@@ -103,15 +105,16 @@ To use, all you need to do is download scripts folder and the toolbox and instal
 
 *Background*
 
-https://community.esri.com/people/danretired/blog/2020/05/15/point-tools-for-pro
-https://community.esri.com/docs/DOC-14926-free-tools-for-arcgis-pro-point-tools
+[Point tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/point-tools-for-pro/ba-p/904043)
+
+[Point tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-point-tools/ta-p/916006)
 
 *General blog posts*
 
-https://community.esri.com/blogs/dan_patterson/2018/03/01/geometry-stuff-to-do-with-points
+[Geometry ... Stuff to do with points](https://community.esri.com/t5/python-blog/geometry-stuff-to-do-with-points/ba-p/902633)
 
 
-(1)  Concave hull  https://community.esri.com/blogs/dan_patterson/2018/03/11/concave-hulls-the-elusive-container
+(1)  Concave hull  [Concave hulls: the elusive container](https://community.esri.com/t5/python-blog/concave-hulls-the-elusive-container/ba-p/902545)
 
 (2)  Convex hull
 
