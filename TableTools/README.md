@@ -5,13 +5,15 @@
 
 Tools for working with ArcGIS Pro and featureclass tabular data.
 
-Blog link for background information and images
+Blog link for background information and images.
 
-https://community.esri.com/people/danretired/blog/2020/05/18/free-tools-for-arcgis-pro-table-tools
-https://community.esri.com/docs/DOC-14928-free-tools-for-arcgis-pro-table-tools
+[Table tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/table-tools-for-pro/ba-p/904042)
+
+[Table tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-table-tools/ta-p/916415)
 
 Older
-https://community.esri.com/blogs/dan_patterson/2018/02/12/table-tools-a-set-of-tools-for-working-with-tabular-data
+
+[Working with tabular data](https://community.esri.com/t5/python-blog/table-tools-for-arcgis-pro-tools-for-working-with-tabular-data/ba-p/902405)
 
 
 **Notes**
