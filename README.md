@@ -7,14 +7,18 @@ This folder contains various toolboxes for working with feature data in ArcGIS P
 
 **NOTE**
 
-The main testing repository for this package is *npgeom* on the main landing page.  I move finished materials here when I have completed updates or additions to it.
+The main testing repository for this package is *numpy_geometry* on the main landing page.
+
+I move finished materials here when I have completed updates or additions to it.
 
 ----
 
 ### [**Free tools**](/Free_Tools/README.md)
 
 Free tools are sample tools that use numpy and arcpy to implement tools that normally require a Standard or Advanced ArcGIS Pro license.
-It should be noted, that in some cases, the implementation is partial because either a full implementation couldn't be done or I didn't feel like it.  In any event, the principles of the tools should be available at the Basic license level... like Split Layer by Attribute ... which took about 15 years to do so.  
+It should be noted, that in some cases, the implementation is partial because either a full implementation couldn't be done or I didn't feel like it.
+
+In any event, the principles of the tools should be available at the Basic license level... like Split Layer by Attribute ... which took about 15 years to do so.  
 
 The script can be examined for details in thes old links as well.
 
