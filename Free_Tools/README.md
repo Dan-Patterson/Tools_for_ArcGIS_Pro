@@ -1,5 +1,6 @@
-## Free the tools ##
+## FreeTools ##
 
 Moved to
 
-https://github.com/Dan-Patterson/numpy_geometry/tree/master/arcpro_npg
+[NumPy Geometry](https://dan-patterson.github.io/numpy_geometry/)
+
