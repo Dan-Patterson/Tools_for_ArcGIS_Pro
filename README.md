@@ -141,8 +141,3 @@ The arrays can be brought into ArcMap or ArcGIS Pro using the arcpy.da module's 
 
 More data constructs will be added as needed.
 
-
-### **all_scripts**
-
-The scripts for the toolboxes as separate entities for those that just need the script for other purposes.  Be aware of any dependencies in the scripts if they are specified.
-
