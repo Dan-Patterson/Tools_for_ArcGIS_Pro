@@ -1,1 +1,18 @@
-theme: jekyll-theme-cayman
+
+# --- Required options --- #
+
+title: Tools for ArcGIS Pro
+theme: jekyll-theme-dinky
+show_downloads: true
+
+# Name of website
+name: Tools for ArcGIS Pro
+description: A set of tools for working with geometry and attributes in ArcGIS Pro. The focus is largely on geometry operations. No advanced license is required.  
+
+# [npg](voronoi2.png)
+# Your name to show in the footer
+author: Dan Patterson
+  
+url: "https://dan-patterson.github.io/Tools_for_ArcGIS_Pro"
+
+# theme: jekyll-theme-cayman
