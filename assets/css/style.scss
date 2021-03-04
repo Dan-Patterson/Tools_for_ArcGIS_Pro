@@ -1,0 +1,67 @@
+---
+---
+
+@import "{{ site.theme }}";
+/* Wrapper change from 960px  */
+.wrapper {
+  width:1280px;
+}
+
+/* Section - for main page content changed from 650*/
+
+section {
+  width:960px;
+  float:right;
+  padding-bottom:50px;
+}
+
+
+/* Footer */
+
+footer {
+  width:170px;
+  float:left;
+  position:fixed;
+  bottom:10px;
+	padding-left: 50px;
+}
+
+/* changed max width from 960px */
+@media print, screen and (max-width: 1280px) {
+
+  div.wrapper {
+    width:auto;
+    margin:0;
+  }
+
+  header, section, footer {
+    float:none;
+    position:static;
+    width:auto;
+  }
+
+	footer {
+		border-top: 1px solid #ccc;
+		margin:0 84px 0 50px;
+		padding:0;
+	}
+
+  header {
+    padding-right:320px;
+  }
+
+  section {
+    padding:20px 84px 20px 50px;
+    margin:0 0 20px;
+  }
+
+  header a small {
+    display:inline;
+  }
+
+  header ul {
+    position:absolute;
+    right:130px;
+    top:84px;
+  }
+}
