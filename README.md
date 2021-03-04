@@ -22,20 +22,20 @@ In any event, the principles of the tools should be available at the Basic licen
 
 The script can be examined for details in thes old links as well.
 
-- [Frequency and Statistics](https://community.esri.com/t5/python-blog/free-advanced-tools-frequency-and-statistics/ba-p/902835)
-- [Feature extent to poly features](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-extent-to-poly-features/ba-p/893420)
-- [Feature to points](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-to-point/ba-p/893553)
-- [Convex hulls](https://community.esri.com/t5/python-blog/free-advanced-tools-convex-hulls/ba-p/893549)
-- [Polygons to lines or segments](https://community.esri.com/t5/python-blog/free-advanced-tools-polygons-to-lines-or-segments/ba-p/902811)
-- [Minimum area bounding circles](https://community.esri.com/t5/python-blog/free-advanced-tools-bounding-circles/ba-p/902820)
+ - [Frequency and Statistics](https://community.esri.com/t5/python-blog/free-advanced-tools-frequency-and-statistics/ba-p/902835)
+ - [Feature extent to poly features](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-extent-to-poly-features/ba-p/893420)
+ - [Feature to points](https://community.esri.com/t5/python-blog/free-advanced-tools-feature-to-point/ba-p/893553)
+ - [Convex hulls](https://community.esri.com/t5/python-blog/free-advanced-tools-convex-hulls/ba-p/893549)
+ - [Polygons to lines or segments](https://community.esri.com/t5/python-blog/free-advanced-tools-polygons-to-lines-or-segments/ba-p/902811)
+ - [Minimum area bounding circles](https://community.esri.com/t5/python-blog/free-advanced-tools-bounding-circles/ba-p/902820)
 
 ----
 ### [**Polygon_line tools**](/PolygonLineTools/README.md)
 
 A collection of tools directed towards work with poly* features.
 
-- [Polyline tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/polygon-polyline-tools-for-pro/ba-p/904067)
-- [Polygon Polyline tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-polygon-polyline-tools/ta-p/917751)
+ - [Polyline tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/polygon-polyline-tools-for-pro/ba-p/904067)
+ - [Polygon Polyline tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-polygon-polyline-tools/ta-p/917751)
 
 ----
 ### [**PointTools**](/PointTools/README.md)
@@ -51,8 +51,8 @@ This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbo
 
 The toolbox and script(s) contained here are for working with tabular data in ArcGIS Pro.  Also available at
 
-- [Table tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/table-tools-for-pro/ba-p/904042)
-- [Table tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-table-tools/ta-p/916415)
+ - [Table tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/table-tools-for-pro/ba-p/904042)
+ - [Table tools](https://community.esri.com/t5/python-documents/free-tools-for-arcgis-pro-table-tools/ta-p/916415)
 
 The foundations is the ability of NumPy to perform rudimentary array operations simply and efficiently on a vectorized basis. This small toolbox implements
 
