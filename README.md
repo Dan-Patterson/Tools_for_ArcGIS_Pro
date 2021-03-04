@@ -82,7 +82,7 @@ Contains an implementation for concave hull determination based on k-nearest nei
 This folder is a collection of scripts which contain defs which can be used in other modules or specifically, they can be used in the field calculator in ArcGIS Pro or ArcMap.  The header contains useage information, and a python parser is assumed in all cases.  Check the respective help documentation on how to use the field calculator from within a table or the Calculate Field tool in Pro.
 
 
-### Feature Extent to Poly\* Features
+### **Feature Extent to Poly Features**
 
 Produce axis-aligned extent rectangles from polygon/poline features.
 
