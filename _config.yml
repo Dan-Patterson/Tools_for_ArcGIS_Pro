@@ -9,10 +9,23 @@ show_downloads: true
 name: Tools for ArcGIS Pro
 description: A set of tools for working with geometry and attributes in ArcGIS Pro. The focus is largely on geometry operations. No advanced license is required.  
 
-# [npg](voronoi2.png)
 # Your name to show in the footer
 author: Dan Patterson
   
 url: "https://dan-patterson.github.io/Tools_for_ArcGIS_Pro"
 
-# theme: jekyll-theme-cayman
+# kramdown
+markdown: GFM
+
+#navbar-img: "/assets/img/bgimage.png"
+#footer-img: "/assets/img/bgimage.png"
+#page-img: "/assets/img/bgimage.png"
+plugins:
+  - jekyll-paginate
+  - jekyll-sitemap
+
+# Gems
+#gems:
+#  - jekyll-paginate
+# --- reference ---
+# https://github.com/daattali/beautiful-jekyll/blob/master/_config.yml
