@@ -7,6 +7,24 @@
   width:1280px;
 }
 
+/* Code blocks */
+
+code, pre {
+	font-family: Monaco, "Bitstream Vera Sans Mono", "Lucida Console", Terminal, monospace;
+  color:#000;
+  font-size:12px;
+}
+
+pre {
+	padding: 4px 12px;
+  background: #FDFEFB;
+  border-radius:4px;
+  border:1px solid #D7D8C8;
+  overflow: auto;
+  overflow-y: hidden;
+	margin-bottom: 32px;
+}
+
 /* Section - for main page content changed from 650*/
 
 section {
