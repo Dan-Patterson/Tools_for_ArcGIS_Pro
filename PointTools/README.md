@@ -5,15 +5,14 @@ Tools for working with point featureclasses.
 
 Developed in ArcGIS PRO.
 
-Most tools use NumPy for their data processing (numpy >= 1.16 should be fine).
+Most tools use NumPy for their data processing.
 
 *Notes*
 
 - Download the zip file and unzip in a folder.
 - Add the toolbox to your project.
+- There is a atbx and tbx version of the toolboxes, the contents of the Scripts folder is also available here if you just want to examine script contents.
 
-
-The scripts can be examined here without having to download the zip.
 
 **Toolbox, Toolsets and Tools**
 
