@@ -3,7 +3,10 @@
 
 ----
 
-**I no longer have access to ArcGIS Pro, so I won't be supporting any of the existing tools, nor developing functionality that relies on arcpy or ArcGIS Pro toolboxes.
+**Point tools  - update 2026-05-07 **
+
+
+**I won't be supporting any of the existing tools, nor developing functionality that relies on arcpy or ArcGIS Pro toolboxes as a matter of course.
 Most analysis functionality that is geometry related can be handled by the *npg* module.**
 
 This folder contains various toolboxes for working with feature data in ArcGIS Pro.
