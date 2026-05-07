@@ -7,7 +7,7 @@ Script:   arcpytools_pnt.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-08-22
+Modified: 2026-05-07
 
 Purpose:  tools for working with numpy arrays
 
@@ -45,20 +45,6 @@ def tweet(msg):
     arcpy.AddMessage(m)
     print(m)
 
-
-#def _describe(in_fc=None):
-#    """Simply return the arcpy.da.Describe object
-#    : desc.keys() an abbreviated list...
-#    : [... 'OIDFieldName'... 'areaFieldName', 'baseName'... 'catalogPath',
-#    :  ... 'dataType'... 'extent', 'featureType', 'fields', 'file'... 'hasM',
-#    :  'hasOID', 'hasZ', 'indexes'... 'lengthFieldName'... 'name', 'path',
-#    :  'rasterFieldName', ..., 'shapeFieldName', 'shapeType',
-#    :  'spatialReference',  ...]
-#    """
-#    if in_fc is None:
-#        return None
-#    else:
-#        return arcpy.da.Describe(in_fc)
 
 def fc_info(in_fc, prn=False):
     """Return basic featureclass information, including...

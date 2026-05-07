@@ -2,7 +2,7 @@
 """
 :Script:   closest.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-04-11
+:Modified: 2026-05-07
 :
 :Purpose:  Determine the nearest points based on euclidean distance within
 :  a point file and then connect them

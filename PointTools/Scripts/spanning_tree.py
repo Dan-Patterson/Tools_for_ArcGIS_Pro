@@ -7,7 +7,7 @@ Script: spanning_tree.py
 
 Author: Dan_Patterson@carleton.ca
 
-Modified: 2018-06-13
+Modified: 2026-05-07
 
 Original: ... mst.py in my github
     extensive documentation is there.
@@ -293,7 +293,8 @@ def _tool():
         fr_to = np.array(list(zip(os, ds)))
         s = []
         for pt in fr_to:
-            s.append(arcpy.Polyline(arcpy.Array([arcpy.Point(*p) for p in pt]), SR))
+            s.append(arcpy.Polyline(arcpy.Array([arcpy.Point(*p) for p in pt]),
+                                    SR))
 
         if arcpy.Exists(out_fc):
             arcpy.Delete_management(out_fc)

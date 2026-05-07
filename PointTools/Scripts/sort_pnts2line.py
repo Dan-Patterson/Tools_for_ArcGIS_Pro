@@ -7,7 +7,7 @@ Script :   sort_pnts2line.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-06-12
+Modified : 2026-05-07
 
 Purpose:  tools for working with numpy arrays
 

@@ -7,7 +7,7 @@ Script:  rotate_pnts.py
 
 Author:  Dan.Patterson@carleton.ca
 
-Modified: 2018-07-23
+Modified: 2026-05-07
 
 Notes:
 -----
@@ -44,7 +44,7 @@ def extent_(a):
     return [L, B, R, T]
 
 
-def trans_rot(a, angle=0.0, unique=True):
+def trans_rot(a, angle=0.0, unique=False):
     """Translate and rotate and array of points about the point cloud origin.
 
     Requires:
@@ -110,7 +110,7 @@ else:
 shp_fld, oid_fld, shp_type, SR = fc_info(in_fc)
 arr = arcpy.da.FeatureClassToNumPyArray(in_fc, "*", "", SR, True)
 a = arr[shp_fld]
-new_pnts = trans_rot(a, angle)
+new_pnts = trans_rot(a, angle, unique=False)
 nms = ['Feat_id', 'XYs'] + [i for i in arr.dtype.names[2:]]
 arr.dtype.names = nms
 arr['XYs'] = new_pnts

@@ -2,7 +2,7 @@
 """
 :Script:   closetbl.py
 :Author:   Dan_Patterson@carleton.ca
-:Modified: 2018-03-20
+:Modified: 2026-05-07
 :
 :Purpose:  Determine the nearest points based on euclidean distance within
 :  a point file.  Emulates Generate Near Table in ArcMap
@@ -222,14 +222,14 @@ def nn_kdtree(a, N=1, sorted_=True, to_tbl=True, as_cKD=True):
 def _tool():
     """ run the tool"""
     in_fc = sys.argv[1]
-    N = int(sys.argv[2])
+    N = sys.argv[2]
     out_tbl = sys.argv[3]
     args = [script, in_fc, N, out_tbl]
-    tweet(frmt.format(*args))           # call tweet
+    # tweet(frmt.format(*args))           # call tweet
     a = to_array(in_fc)                 # call to_array
 #    nt = near_tbl(a, b=None, N=N)       # call near_tbl
     nt = nn_kdtree(a, N=3, sorted_=True, to_tbl=True, as_cKD=True)
-    tweet("\nnear table\n{}".format(nt)) #.reshape(nt.shape[0], 1)))
+    # tweet("\nnear table\n{}".format(nt)) #.reshape(nt.shape[0], 1)))
     arcpy.da.NumPyArrayToTable(nt, out_tbl)
 
 if len(sys.argv) == 1:

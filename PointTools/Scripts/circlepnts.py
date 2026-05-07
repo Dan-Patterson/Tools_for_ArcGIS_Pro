@@ -2,7 +2,7 @@
 """
 :Script:   createcompass.py
 :Author   Dan_Patterson@carleton.ca
-:Modified: 2017-04-02
+:Modified: 2026-05-07
 : if north angle is needed, you can use this to convert
 :if fromNorth:
 :    ang = np.mod((450.0 - ang), 360.)

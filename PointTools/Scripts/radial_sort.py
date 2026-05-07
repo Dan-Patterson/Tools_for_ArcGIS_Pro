@@ -2,7 +2,7 @@
 """
 :Script:   radial_sort.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-02-27
+:Modified: 2026-05-07
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :

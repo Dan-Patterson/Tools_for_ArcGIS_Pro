@@ -7,7 +7,7 @@ Script :   triangulate.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2019-02-07
+Modified : 2026-05-07
 
 Purpose:  triangulate poly* features using scipy/qhull functions.
 
@@ -133,11 +133,11 @@ def poly(pnt_groups, SR):
     """Short form polygon creation
     """
     polygons = []
+    #tweet(pnt_groups)
     for pnts in pnt_groups:
-        for pair in pnts:
-            arr = Array([Point(*xy) for xy in pair])
-            pl = Polygon(arr, SR)
-            polygons.append(pl)
+        arr = Array([Point(*xy) for xy in pnts])
+        pl = Polygon(arr, SR)
+        polygons.append(pl)
     return polygons
 
 
@@ -179,6 +179,7 @@ def tri_pnts(pnts, testing=False):
     tri = Delaunay(p)
     simps = tri.simplices
     new_pnts = [p[s]+avg for s in simps]
+    tweet("\nNew points\n{}".format(new_pnts))
     if testing:
         print("{}".format(new_pnts))
     out.append(new_pnts)
@@ -257,7 +258,7 @@ def _tri_tool():
         c = infinity_circle(a, fac=10)
         aa = np.vstack((a, c))
         v = vor_pnts(aa, testing=False)
-        polys = poly([v], SR)
+        polys = poly(v, SR)
         if Exists(out_fc):
             Delete(out_fc)
         CopyFeatures(polys, "in_memory/temp")

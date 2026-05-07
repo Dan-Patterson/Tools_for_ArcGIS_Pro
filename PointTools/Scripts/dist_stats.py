@@ -4,7 +4,7 @@ Script :   dist_stats.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-07-14
+Modified : 2026-05-07
 
 Purpose:
 -------
@@ -17,6 +17,7 @@ Purpose:
 
 import sys
 import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured as stu
 import arcpy
 from arcpytools_pnt import fc_info, tweet, make_row_format, _col_format, form_
 from textwrap import dedent
@@ -77,10 +78,15 @@ def process(in_fc, id_fld, prn=True):
     a_split = np.split(a_sort, np.where(np.diff(a_sort[id_fld]))[0] + 1)
     msg = ""
     tbl = []
+    tweet(a_in)
     for i in range(len(a_split)):
         a0 = a_split[i][['SHAPE@X', 'SHAPE@Y']]
+        if len(a0) < 2:
+            msg += "less than 2 features"
+            continue
         a = a0.copy()
-        a = a.view((a.dtype[0], len(a.dtype.names)))  # art.geom._view_(a0)
+        # a = a.view((a.dtype[0], len(a.dtype.names)))  # art.geom._view_(a0)
+        a = stu(a)
         cent = np.mean(a, axis=0)
         min_ = np.min(a, axis=0)
         max_ = np.max(a, axis=0)

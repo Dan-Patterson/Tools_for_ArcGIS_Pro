@@ -2,7 +2,7 @@
 """
 :Script:  movepnts.py
 :Author:  Dan.Patterson@carleton.ca
-:Modified: 2017-04-06
+:Modified: 2026-05-07
 :Notes:
 :- arcpy.da.FeatureClassToNumPyArray(in_table, field_names, {where_clause},
 :                                    {spatial_reference}, {explode_to_points},

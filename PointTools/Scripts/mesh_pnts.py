@@ -2,7 +2,7 @@
 """
 :Script:   mesh_pnts.py
 :Author:   Dan_Patterson@carleton.ca
-:Modified: 2017-04-11
+:Modified: 2026-05-07
 :Purpose:  Just makes points on a grid as well as the meshgrid
 :
 :---------------------------------------------------------------------:

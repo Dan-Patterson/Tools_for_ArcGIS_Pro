@@ -2,7 +2,7 @@
 """
 :Script:   spaced.py
 :Author:   Dan_Patterson@carleton.ca
-:Modified: 2017-04-11
+:Modified: 2026-05-07
 :Purpose:  tools for working with numpy arrays
 :
 :Original sources:
@@ -92,7 +92,7 @@ def n_spaced(L=0, B=0, R=10, T=10, min_space=1, num=10, verbose=True):
 # ---- main section ---------------------------------------------------------
 #
 aoi = sys.argv[1]  # '340000 5020000 344999.999999999 5025000 NaN NaN NaN NaN'
-min_space = int(sys.argv[2])
+min_space = float(sys.argv[2])
 num = int(sys.argv[3])
 SR = sys.argv[4]
 out_fc = sys.argv[5]
@@ -131,5 +131,5 @@ if __name__ == "__main__":
     : - print the script source name.
     : - run the _demo
     """
-#    print("Script... {}".format(script))
-    pass
+    print("Script... {}".format(script))
+

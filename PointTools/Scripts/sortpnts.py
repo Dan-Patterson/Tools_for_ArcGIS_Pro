@@ -2,7 +2,7 @@
 """
 :Script:   sortpnts.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-02-28
+:Modified: 2026-05-07
 :Purpose: Sort points by X or Y in ascending or descending order
 """
 
