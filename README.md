@@ -3,7 +3,7 @@
 
 ----
 
-**Point tools  - update 2026-05-07 **
+**Point tools  - update 2026-05-07**
 
 
 **I won't be supporting any of the existing tools, nor developing functionality that relies on arcpy or ArcGIS Pro toolboxes as a matter of course.
@@ -46,9 +46,9 @@ A collection of tools directed towards work with poly* features.
 ----
 ### [**PointTools**](/PointTools/README.md)
 
-**Update 2020-05-11**
+**Update 2026-05-07**
 
-This folder contains a zip file (PointTools_pro.zip).  The zip contains a toolbox and associated script(s) for working with point features in ArcGIS Pro.
+This folder contains a zip file (PointTools_pro.zip).  The zip contains a *.atbx and a *.tbx version of the toolbox.  Both use the same script(s) for working with point features in ArcGIS Pro.
 
 -------------------------
 ### [**TableTools**](/TableTools/README.md)
