@@ -15,8 +15,9 @@ import sys
 import os
 from textwrap import dedent
 import numpy as np
+from numpy.lib.recfunctions import structured_to_unstructured as stu
 import arcpy
-from arcpytools_pnt import _describe, fc_info, tweet
+from arcpytools_pnt import fc_info, tweet  # _describe, 
 import warnings
 
 warnings.simplefilter('ignore', FutureWarning)
@@ -260,12 +261,12 @@ else:
     # ---- Process section ------------------------------
     #
     pnts_out, plys_out, cent, SR = vals
-    desc = _describe(in_fc)
+    desc = arcpy.da.Describe(in_fc)
     arcpy.env.workspace = desc['path']  # set the workspace to the gdb
     arr = _xyID(in_fc, to_pnts=True)
     indx = arr['IDs']
     pnts = arr[['Xs', 'Ys']]
-    pnts = pnts.view(np.float64).reshape(pnts.shape[0], 2)
+    pnts = stu(pnts)  # pnts.view(np.float64).reshape(pnts.shape[0], 2)  changed 2026-05-08
     if cent is None:
         cent = np.mean(pnts, axis=0).tolist()
     #
