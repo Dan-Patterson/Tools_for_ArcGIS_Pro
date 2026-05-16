@@ -2,7 +2,7 @@
 """
 :Script:   rank_field.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-07-12
+:Modified: 2026-05-14
 :Purpose:  tools for working with arcpy and numpy arrays
 :  - sort a table based on a field or fields
 :References:

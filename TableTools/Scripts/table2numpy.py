@@ -7,7 +7,7 @@ Script :   table2numpyarray.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-03-18
+Modified: 2026-05-13
 
 Purpose:  tools for working with numpy arrays
 
@@ -82,7 +82,7 @@ def _tool():
             elif t in ('Double', 'Float'):
                 t = np.nan
             elif t in ('String', 'Text'):
-                t = np.unicode_(None)
+                t = np.str_(None)
             else:
                 t = np.iinfo(np.int32).min
             f_dict[n] = t
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     : - print the script source name.
     : - run the _demo
     """
-#    print("Script... {}".format(script))
+    # print("Script... {}".format(script))
     a = _demo()
 
 #in_tbl = 'C:\\GIS\\A_Tools_scripts\\Numpy_arc\\Numpy_arc.gdb\\sample_1000'

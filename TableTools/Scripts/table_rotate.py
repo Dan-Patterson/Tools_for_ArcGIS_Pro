@@ -7,7 +7,7 @@ Script :   table_rotate.py
 
 Author :   Dan.Patterson@carleton.ca
 
-Modified : 2018-12-30
+Modified : 2026-05-14
 
 Purpose:  tools for working with numpy arrays
 Useage:
@@ -118,11 +118,11 @@ def rotate_tbl(a, max_cols=20, line_wdth=79):
     cut = min(a.shape[0], max_cols)
     rc = (len(a[0]), cut + 1)
     a = a[:cut]
-    e = np.empty(rc, dtype=np.object)
+    e = np.empty(rc, dtype='O')
     e[:, 0] = a.dtype.names
     types = (list, tuple, np.ndarray)
     u0 = [[[j, 'seq'][isinstance(j, types)] for j in i] for i in a]
-    u = np.array(u0, dtype=np.unicode_)
+    u = np.array(u0, dtype=np.str_)
     e[:, 1:] = u[:].T
     widths = [max([len(i) for i in e[:, j]]) for j in range(e.shape[1])]
     f = ["{{!s: <{}}} ".format(width + 1) for width in widths]

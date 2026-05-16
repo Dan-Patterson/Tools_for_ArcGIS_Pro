@@ -7,7 +7,7 @@ Script :   excel2tbl.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-11-23
+Modified : 2026-05-12
 
 Purpose:  tools for working with numpy arrays
 
@@ -26,13 +26,24 @@ References
 
 import sys
 import numpy as np
-import xlrd
+import pandas as pd
+# import xlrd
+import openpyxl
 import arcpy.da
 from arcpy import env
 
+def tweet(msg):
+    """Produce a message for both arcpy and python
+    : msg - a text message
+    """
+    m = "{}".format(msg)
+    arcpy.AddMessage(m)
+    print(m)
+
+
 env.overwriteOutput = True
-#from arcpytools import fc_info, tweet  #, frmt_rec, _col_format
-#import arcpy
+# from arcpytools import fc_info, tweet  #, frmt_rec, _col_format
+# import arcpy
 
 ft = {'bool': lambda x: repr(x.astype(np.int32)),
       'float_kind': '{: 0.3f}'.format}
@@ -42,11 +53,13 @@ np.ma.masked_print_option.set_display('-')  # change to a single -
 
 script = sys.argv[0]  # print this should you need to locate the script
 
+
 # ----------------------------------------------------------------------
 # ---- excel_np
 def excel_np(path, sheet_num=0, int_null=-999):
-    """Read excel files to numpy structured/record arrays.  Your spreadsheet
-    must adhere to simple rules::
+    """Read excel files to numpy structured/record arrays.
+
+    Your spreadsheet must adhere to simple rules::
       - first row must contain the field names for the output array
       - no blank rows or columns, basically, no fluff or formatting
       - if you have nodata values, put them in, since blank cells will be
@@ -56,7 +69,7 @@ def excel_np(path, sheet_num=0, int_null=-999):
     See arraytools.a_io for excel_np for complete description
     """
     def isfloat(a):
-        """float check"""
+        """Check floats."""
         try:
             i = float(a)
             return i
@@ -64,18 +77,22 @@ def excel_np(path, sheet_num=0, int_null=-999):
             return np.nan
 
     def punc_space(name):
-        """delete punctuation and spaces and replace with '_'"""
+        """Delete punctuation and spaces and replace with '_'."""
         punc = list('!"#$%&\'()*+,-./:;<=>?@[\\]^`{|}~ ')
         return "".join([[i, '_'][i in punc] for i in name])
 
-    # import xlrd
-    w = xlrd.open_workbook(path)        # xlrd.book.Book class
-    sheets = len(w.sheets())
-    if sheet_num > sheets:
-        return None
-    sheet = w.sheet_by_index(sheet_num) # sheet by number
-    # sheet = w.sheet_by_name('test')   # case sensitive, not implemented
-    names = sheet.row_values(0)         # clean these up later
+    #w = openpyxl.load_workbook(path)
+    df = pd.read_excel(path, sheet_name=sheet_num)
+    data = df.to_records()  # for plain ndarray use ... df.to_numpy()
+    # sheets = len(w.sheetnames)
+    # if sheet_num > sheets:
+    #     return None
+    # sheet = w.sheet_by_index(sheet_num)  # sheet by number
+    # sheet = w.sheet_by_name('test')    # case sensitive, not implemented
+    # sheet = w.worksheets[sheet_num]
+    # data = np.array([[cell.value for cell in row] for row in sheet.iter_rows()])
+    """
+    names = sheet.row_values(0)          # clean these up later
     cols = sheet.ncols
     rows = sheet.nrows
     col_data = [sheet.col_values(i, 1, rows) for i in range(cols)]
@@ -111,7 +128,8 @@ def excel_np(path, sheet_num=0, int_null=-999):
     for i in names:
         arr[i] = clean[cnt]
         cnt += 1
-    return arr
+    """
+    return data
 
 
 # ----------------------------------------------------------------------
@@ -138,6 +156,8 @@ else:
     if arr is None:
         print("not a sheet number")
     else:
+        tweet(arr[:5])
+        tweet(arr.dtype)
         arcpy.da.NumPyArrayToTable(arr, out_tbl)
 
 # parameters here

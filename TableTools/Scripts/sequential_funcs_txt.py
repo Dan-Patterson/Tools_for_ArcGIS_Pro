@@ -7,7 +7,7 @@ Script:   sequential_funcs_txt.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-06-04
+Modified: 2026-05-13
 
 Purpose :
     Calculating sequential values for fields in geodatabase tables

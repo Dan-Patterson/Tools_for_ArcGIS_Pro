@@ -2,7 +2,7 @@
 """
 :Script:   query_reclass.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-11-16
+:Modified: 2026-05-13
 :Purpose:  tools for working with numpy arrays
 :Useage:  Used in arctoolbox for 'like' sub-query style queries
 : - create a field in a geodatabase table and calculates values based on
@@ -96,7 +96,7 @@ out_fld = arcpy.ValidateFieldName(out_fld)
 flds = ['OBJECTID', in_fld]
 args = [in_fc, flds, None, None, False, (None, None)]
 cur = arcpy.da.SearchCursor(*args)
-a = cur._as_narray()
+a = cur._as_narray()  # -- produce the ndarray
 # ----
 args = ["-"*60, in_fc, in_fld, out_fld, from_s, to_s, a]
 frmt = """
@@ -126,6 +126,7 @@ out['IDs'] = np.arange(1, len(a) + 1, dtype='int32')
 cnt = 0
 for f in from_s:
     idx = np.array([i for i, item in enumerate(a[in_fld]) if f in item])
+    tweet("to_s {}".format(to_s[cnt]))
     out[out_fld][idx] = to_s[cnt]
     cnt += 1
 #

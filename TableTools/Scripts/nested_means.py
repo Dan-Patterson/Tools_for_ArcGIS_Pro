@@ -3,17 +3,19 @@
 script name here
 =======
 
-Script :   template.py
+Script :   nested_means.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2019-
+Modified : 2026-05-15
 
-Purpose :  Tools for
+Purpose :  calculate nested means.
 
 Notes:
 
 References:
+
+`<https://community.esri.com/t5/python-questions/nested-means-classification/td-p/32476>`_.
 
 """
 # pylint: disable=C0103  # invalid-name
@@ -49,7 +51,7 @@ def mean_split(a, minSize=3, cmax=9):
     """split at means"""
     def slice_array(a):
         m = np.mean(a)
-        yes = a <= m  # check for a less than the overal mean
+        yes = a <= m  # check for a less than the overall mean
         a_left, a_rght = a[~yes], a[yes]  # slice the arrays
         return m, a_left, a_rght
     # ----
@@ -123,14 +125,19 @@ classed = np.digitize(a, bins=means)
 # (4)  Send the results to the output array and add it back to arcgis pro
 #
 out_arr[out_fld] = classed
-#arcpy.da.ExtendTable(tbl, 'OID@', out_arr, 'OID@')
+arcpy.da.ExtendTable(tbl, 'OID@', out_arr, 'OID@')
+
+o_mean = np.mean(a)
 
 frmt = """
+Nested means and their class counts.
+overall mean : {}
 means  : {}
 counts : {}
 """
-c, m= np.histogram(a, means)
-tweet(frmt.format(m, c))
+c, m = np.histogram(a, means)
+
+tweet(frmt.format(o_mean, m, c))
 # ==== Processing finished ====
 # ===========================================================================
 #

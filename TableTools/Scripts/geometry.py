@@ -3,6 +3,8 @@
 geometry
 ========
 
+modified : 2026-05-13
+--------
 Requires:
 ---------
 
@@ -53,8 +55,6 @@ def angles_(a, in_deg=True, kind="sum"):
     ang = np.arctan2(cr, dt)
     two_pi = np.pi*2.
     angles = np.where(ang<0, ang + two_pi, ang)
-    if in_deg:
-        angles = np.degrees(angles)
     if in_deg:
         angles = np.degrees(angles)
     if kind == "sum":

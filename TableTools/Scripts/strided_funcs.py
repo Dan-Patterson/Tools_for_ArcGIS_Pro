@@ -7,7 +7,7 @@ Script :   strided_funcs.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-07-28
+Modified : 2026-05-14
 
 Purpose:  tools for working with numpy arrays using srided functions
 
@@ -136,7 +136,10 @@ def strided_func(a, step=3, func='mean'):
     start = step // 2  # integer division to determine the start for filling
     b = stride(a, win=(step,), stepby=(1,))
     out_array = np.zeros((a.shape[0],), dtype=a.dtype)
-    out_array.fill(np.nan)
+    if a.dtype.kind == 'i':
+        out_array.fill(0)
+    else:
+        out_array.fill(np.nan)
     if func == 'mean':
         out_array[start: -start] = np.nanmean(b, axis=1)
     elif func == 'median':

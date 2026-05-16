@@ -7,7 +7,7 @@ Script :   poly_field_calcs.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-07-25
+Modified : 2026-05-13
 
 Purpose :  tools for working ArcGIS Pro field calculator
 

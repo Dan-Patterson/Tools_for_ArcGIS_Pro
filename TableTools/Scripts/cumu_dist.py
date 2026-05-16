@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """ input shape field: returns cumulative distance between points
 dist_cumu(!Shape!)    #enter into the expression box"""
+
 import math
 x0 = 0.0;  y0 = 0.0;  distance = 0.0
 def dist_cumu(shape):

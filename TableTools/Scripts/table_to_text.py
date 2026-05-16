@@ -5,12 +5,12 @@ table_to_text
 
 Script :   table_to_text.py
 Author :   Dan.Patterson@carleton.ca
-Modified : 2018-12-29
+Modified : 2026-05-15
 
 Purpose:
 --------
-To produce a formatted list/array format for ndarray, structured arrays,
- recarrays
+To produce a formatted list/array format for ndarray, structured arrays or
+recarrays.
 
 References:
 -----------
@@ -36,25 +36,27 @@ def null_dict(flds):
     """Produce a null dictionary from a list of fields
     These must be field objects and not just their name.
     """
-    dump_flds = ["OBJECTID","Shape_Length", "Shape_Area", "Shape"]
-    flds_oth = [f for f in flds
-                if f.name not in dump_flds]
-#    oid_geom = ['OBJECTID', 'SHAPE@X', 'SHAPE@Y']
-    nulls = {'Double':np.nan,
-             'Single':np.nan,
+    nulls = {'Blob':str(None),
+             'BigInteger':np.iinfo(np.int32).min,
+             'Double':np.nan,
+             'Date':str(None),
+             'DateOnly':str(None),
+             'TimeOnly':str(None),
+             'OID':np.iinfo(np.int32).min,
              'Short':np.iinfo(np.int16).min,
+             'Single':np.nan,
              'SmallInteger':np.iinfo(np.int16).min,
              'Long':np.iinfo(np.int32).min,
              'Float':np.nan,
              'Integer':np.iinfo(np.int32).min,
              'String':str(None),
-             'Text':str(None)}
-    fld_dict = {i.name: i.type for i in flds_oth}
-    nulls = {f.name:nulls[fld_dict[f.name]] for f in flds_oth}
+             'Text':str(None)}   
+    fld_dict = {i.name:i.type for i in flds}
+    nulls = {f.name:nulls[fld_dict[f.name]] for f in flds}
     return nulls
 
 
-def tbl_arr(in_tbl, in_flds=None):
+def tbl_arr(in_tbl, in_flds):
     """Convert a table to an array
 
     Requires:
@@ -65,9 +67,8 @@ def tbl_arr(in_tbl, in_flds=None):
         If None or an empty list or tuple, then all fields are returned.
     """
     flds = arcpy.ListFields(in_tbl)
-    dump_flds = ["Shape_Length", "Shape_Area", "Shape"]
-    flds = [f for f in flds if f.name not in dump_flds]
-    in_flds = [f.name for f in flds]
+    dump_flds = ['Geometry', 'Blob', 'Raster']
+    flds = [f for f in flds if f.type not in dump_flds]
     nulls = null_dict(flds)
     if not isinstance(flds, (list, tuple, type(None), "")):
         return "Input is not correct"
@@ -77,7 +78,7 @@ def tbl_arr(in_tbl, in_flds=None):
         if len(in_flds) == 0:
             in_flds = "*"
         else:
-            in_flds = [f.name for f in flds]
+            in_flds = [f for f in in_flds]
     a = arcpy.da.TableToNumPyArray(in_tbl,
                                    in_flds,
                                    skip_nulls=False,
@@ -137,9 +138,6 @@ def _col_format(a, nme="fld", deci=0):
     return c_fmt, col_wdth
 
 
-#def frmt_csv(a):
-#    """Format a structured/recarray to csv format
-#    """
 def frmt_struct(a, deci=2, f_names=True, prn=False):
     """Format a structured array with a mixed dtype.
 
@@ -189,10 +187,7 @@ if len(sys.argv) > 1:
     in_tbl = sys.argv[1]
     in_flds = sys.argv[2]
     out_txt = str(sys.argv[3]).replace("\\", "/")
-    if in_flds in ("#", None, "") or isinstance(in_flds, (list, tuple)):
-        in_flds = None
-    else:
-        in_flds = in_flds.split(";")
+    in_flds = in_flds.split(";")
     
     frmt = """\n
     :---------------------------------------------------------------------:

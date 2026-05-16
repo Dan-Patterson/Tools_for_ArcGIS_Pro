@@ -20,6 +20,7 @@ In the calling script use
 
 In the field calculator calling function, feed it the shape field
     angles_poly(!Shape!)
+
 """
 
 def angles_poly(a, inside=True, in_deg=True, kind="sum"):

@@ -2,7 +2,7 @@
 """
 :Script:   numpyarray2table.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-02-11
+:Modified: 2026-05-13
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -67,7 +67,7 @@ def _tool():
     in_table = "\\".join([out_gdb, out_name])
     # ---- where_clause= skip_nulls=  null_value=)
     arcpy.da.NumPyArrayToTable(a, in_table)
-    arcpy.MakeTableView_management(in_table, out_name)
+    arcpy.management.MakeTableView(in_table, out_name)
     #
     args = [in_arr, out_gdb, out_name]
     msg = """
@@ -106,5 +106,5 @@ if __name__ == "__main__":
     : - print the script source name.
     : - run the _demo
     """
-#    print("Script... {}".format(script))
+    # print("Script... {}".format(script))
     a = _demo()

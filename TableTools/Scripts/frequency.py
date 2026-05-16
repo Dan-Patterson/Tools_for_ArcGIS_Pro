@@ -8,7 +8,7 @@ Script : frequency.py
 
 Author :  Dan_Patterson@carleton.ca
 
-Modified : 2019-02-23
+Modified : 2026-05-15
 
 Purpose :
     To supplant the Frequency tool for those that don't have an

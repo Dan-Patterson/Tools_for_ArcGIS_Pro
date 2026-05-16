@@ -2,7 +2,7 @@
 """
 :Script:   field_statistics.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-02-11
+:Modified: 2026-05-14
 :Purpose:  Descriptive statistics for tables using numpy.
 :
 :References:
@@ -186,7 +186,7 @@ def cal_stats(in_fc, col_names):
     :  c_nan = np.count_nonzero(~np.isnan(b), axis=0) count nan if needed
     """
     a = arcpy.da.FeatureClassToNumPyArray(in_fc, col_names)  # "*")
-    b = a.view(np.float).reshape(len(a), -1)
+    b = a.view(np.float64).reshape(len(a), -1)
     if len(a.shape) == 1:
         ax = 0
     else:

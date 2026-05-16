@@ -8,7 +8,7 @@ Script : cross_tab.py
 
 Author: Dan_Patterson@carleton.ca
 
-Modified : 2019-02-23
+Modified : 2026-05-12
 
 Purpose : Crosstabulate data
 
@@ -50,8 +50,7 @@ def tweet(msg):
 
 
 def _prn(r, c, a):
-    """fancy print formatting.
-    """ 
+    """fancy print formatting.""" 
     r = r.tolist()
     r.append('Total')
     c = c.tolist()
@@ -112,9 +111,7 @@ def crosstab(row, col, verbose=False):
 
 
 def tbl_2_np_array(in_tbl, flds, skip_nulls=False, null_value=None):
-    """Form the TableToNumPyArray to account for nulls for various dtypes
-
-    """
+    """Form the TableToNumPyArray to account for nulls for various dtypes."""
     int_min = np.iinfo(np.int32).min
     float_min = np.finfo(np.float64).min
     str_val = "None"

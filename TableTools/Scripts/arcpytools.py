@@ -2,7 +2,7 @@
 """
 :Script:   arcpytools.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-06-21
+:Modified: 2026-05-15
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :

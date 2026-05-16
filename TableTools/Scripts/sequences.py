@@ -5,9 +5,9 @@ sequences
 
 Script:   sequential_funcs.py
 Author:   Dan.Patterson@carleton.ca
-Modified: 2018-06-02
+Modified: 2026-05-12
 Purpose :
-    Calculating sequential patterns for fields in geodatabase tables
+    Calculating sequential patterns for fields in geodatabase tables.
 Useage :
 
 References:

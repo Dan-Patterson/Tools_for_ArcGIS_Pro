@@ -7,7 +7,7 @@ Script:   sequential_funcs.py
 
 Author:   Dan.Patterson@carleton.ca
 
-Modified: 2018-12-28
+Modified: 2026-05-12
 
 Purpose :
     Calculating sequential values for fields in geodatabase tables
@@ -36,8 +36,7 @@ script = sys.argv[0]  # print this should you need to locate the script
 
 
 def has_nulls(a):
-    """Check to see if nulls are in the array passed from the featureclass
-    """
+    """Check to see if nulls are in the array passed from the featureclass."""
     #
     a_kind = a.dtype.kind
     if a_kind == 'i':
@@ -149,8 +148,7 @@ def z_score(a):
 
 
 def seq_count(a):
-    """See `running_count` in arraytools.tools for a fuller version
-    """
+    """See `running_count` in arraytools.tools for a fuller version."""
     idx = a.argsort(kind='mergesort')
     s_a = a[idx]
     neq = np.where(s_a[1:] != s_a[:-1])[0] + 1
@@ -165,7 +163,7 @@ def seq_count(a):
 
 def form_output(in_tbl, in_arr, out_fld="Result_", del_fld=True,
                 vals=None, idx=0, xtend=False):
-    """Form the output table given a field name and join field
+    """Form the output table given a field name and join field.
 
     Requires:
     ---------

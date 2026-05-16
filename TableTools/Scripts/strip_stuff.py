@@ -2,7 +2,7 @@
 """
 :Script:   strip_stuff.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2018-02-10
+:Modified: 2026-05-15
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :

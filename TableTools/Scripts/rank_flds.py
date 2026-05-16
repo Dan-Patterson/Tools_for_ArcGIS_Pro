@@ -2,7 +2,7 @@
 """
 :Script:   rank_flds.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-11-01
+:Modified: 2026-05-14
 :Purpose:  tools for working with numpy arrays
 :Useage:  Runk the toolbox, select the parameters
 :

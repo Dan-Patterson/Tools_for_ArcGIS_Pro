@@ -7,7 +7,7 @@ Script :   concatenate_flds.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-05-26
+Modified : 2026-05-13
 
 Purpose :  Concatenate fields from fields in a geodatabase table.
 
@@ -44,7 +44,7 @@ def _cleanup(arrs, strip_list):
     cleaned = []
     for ar in arrs:
         if ar.dtype.kind in ('f', 'i'):
-            tmp = ar.astype(np.unicode_)
+            tmp = ar.astype(np.str_)
         else:
             tmp = ar
         for i in strip_list:
@@ -67,7 +67,7 @@ def concat_flds(arrs, sep='space', name=None, strip_list=None, with_ids=True):
         cleaned = []
         for ar in arrs:
             if ar.dtype.kind in ('f', 'i'):
-                tmp = ar.astype(np.unicode_)
+                tmp = ar.astype(np.str_)
             else:
                 tmp = ar
             for i in strip_list:
@@ -81,6 +81,8 @@ def concat_flds(arrs, sep='space', name=None, strip_list=None, with_ids=True):
         sep = ' '
     elif sep == 'comma':
         sep = ', '
+    elif sep == 'underscore':
+        sep = '_'
     elif sep == 'none':
         sep = ''
     if N < 2:

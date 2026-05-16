@@ -7,7 +7,7 @@ Script :   table_to_csv.py
 
 Author :   Dan_Patterson@carleton.ca
 
-Modified : 2018-12-29
+Modified : 2026-05-14
 
 Purpose :  tools for working with numpy arrays and geometry
 
@@ -39,31 +39,32 @@ def tweet(msg):
     print(m)
     print(arcpy.GetMessages())
 
-
 def null_dict(flds):
     """Produce a null dictionary from a list of fields
     These must be field objects and not just their name.
     """
-    dump_flds = ["OBJECTID","Shape_Length", "Shape_Area", "Shape"]
-    flds_oth = [f for f in flds
-                if f.name not in dump_flds]
-#    oid_geom = ['OBJECTID', 'SHAPE@X', 'SHAPE@Y']
-    nulls = {'Double':np.nan,
-             'Single':np.nan,
+    nulls = {'Blob':str(None),
+             'BigInteger':np.iinfo(np.int32).min,
+             'Double':np.nan,
+             'Date':str(None),
+             'DateOnly':str(None),
+             'TimeOnly':str(None),
+             'OID':np.iinfo(np.int32).min,
              'Short':np.iinfo(np.int16).min,
+             'Single':np.nan,
              'SmallInteger':np.iinfo(np.int16).min,
              'Long':np.iinfo(np.int32).min,
              'Float':np.nan,
              'Integer':np.iinfo(np.int32).min,
              'String':str(None),
-             'Text':str(None)}
-    fld_dict = {i.name: i.type for i in flds_oth}
-    nulls = {f.name:nulls[fld_dict[f.name]] for f in flds_oth}
+             'Text':str(None)}   
+    fld_dict = {i.name:i.type for i in flds}
+    nulls = {f.name:nulls[fld_dict[f.name]] for f in flds}
     return nulls
 
 
-def tbl_arr(in_tbl, in_flds=None):
-    """Convert a table to text
+def tbl_arr(in_tbl, in_flds):
+    """Convert a table to an array
 
     Requires:
     --------
@@ -73,14 +74,18 @@ def tbl_arr(in_tbl, in_flds=None):
         If None or an empty list or tuple, then all fields are returned.
     """
     flds = arcpy.ListFields(in_tbl)
+    dump_flds = ['Geometry', 'Blob', 'Raster']
+    flds = [f for f in flds if f.type not in dump_flds]
     nulls = null_dict(flds)
-    if not isinstance(in_flds, (list, tuple, type(None), "")):
+    if not isinstance(flds, (list, tuple, type(None), "")):
         return "Input is not correct"
-    if in_flds is None:
+    if flds is None:
         in_flds = "*"
     elif isinstance(in_flds, (list, tuple)):
         if len(in_flds) == 0:
             in_flds = "*"
+        else:
+            in_flds = [f for f in in_flds]
     a = arcpy.da.TableToNumPyArray(in_tbl,
                                    in_flds,
                                    skip_nulls=False,
@@ -90,7 +95,7 @@ def tbl_arr(in_tbl, in_flds=None):
 
 # ----------------------------------------------------------------------
 # (3) save_txt .... code section ---
-def save_txt(a, name="arr.txt", sep=", ", dt_hdr=True):
+def save_txt(a, name="arr.csv", sep=", ", dt_hdr=True):
     """Save a NumPy structured, recarray to text.
 
     Requires:
@@ -106,14 +111,14 @@ def save_txt(a, name="arr.txt", sep=", ", dt_hdr=True):
     """
     a_names = ", ".join(i for i in a.dtype.names)
     hdr = ["", a_names][dt_hdr]  # use "" or names from input array
-    s = np.array(a.tolist(), dtype=np.unicode_)
+    s = np.array(a.tolist(), dtype=np.str_)
     widths = [max([len(i) for i in s[:, j]])
               for j in range(s.shape[1])]
 #    frmt = sep.join(["%{}s".format(i) for i in widths])
     frmt = sep.join(["%s" for i in widths])  # stripped out space padding
     # vals = ", ".join([i[1] for i in a.dtype.descr])
     np.savetxt(name, a, fmt=frmt, header=hdr, comments="")
-    print("\nFile saved...")
+    tweet("\nFile saved...")
 
 
 # ---- main section ----

@@ -1,8 +1,8 @@
 # -*- coding: UTF-8 -*-
 """
-:Script:   .py
+:Script:   split_field.py
 :Author:   Dan.Patterson@carleton.ca
-:Modified: 2017-xx-xx
+:Modified: 2026-05-15
 :Purpose:  tools for working with numpy arrays
 :Useage:
 :
@@ -52,7 +52,7 @@ def sp(a, sep=","):
     b = np.array(list(zip(out)))
     b = b.squeeze().T
     cnts = np.char.count(a, ', ')
-    f = np.empty((shp, max(cnts+1)), dtype=np.unicode)
+    f = np.empty((shp, max(cnts+1)), dtype=np.str_)
     for i in range(shp):
         c = cnts[i]
         f[i, :c+1] = [j.strip() for j in a[i].split(',')]
@@ -64,7 +64,7 @@ def sp(a, sep=","):
 def _demo():
     """Code to run if in demo mode
     """
-    in_tbl = r"C:\Git_Dan\arraytools\Data\numpy_demos.gdb\sample_10k"
+    in_tbl = r"C:\Arc_projects\Array_Tools\arraytools\Data\numpy_demos.gdb\sample_10k"
     in_fld = 'Test'
     a = arcpy.da.TableToNumPyArray(in_tbl, in_fld)
 #    a = np. array(['1, 2, 3, 4, 5', 'a, b, c', '6, 7, 8, 9',
