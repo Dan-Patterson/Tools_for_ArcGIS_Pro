@@ -6,6 +6,8 @@
 Tools for working with ArcGIS Pro and featureclass tabular data.
 The toolbox format is now the new `atbx` format.
 
+The *Images* folder will allow you to see some of the toolbox dialogs and result options.
+
 Blog link for background information and images.
 
 [Table tools for ArcGIS Pro](https://community.esri.com/t5/python-blog/table-tools-for-pro/ba-p/904042)
