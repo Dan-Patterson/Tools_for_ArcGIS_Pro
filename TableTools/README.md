@@ -1,9 +1,10 @@
 **Table Tools**
 ----
 
-**Version date : 2020-05-17**
+**Version date : 2026-05-15**
 
 Tools for working with ArcGIS Pro and featureclass tabular data.
+The toolbox format is now the new `atbx` format.
 
 Blog link for background information and images.
 
