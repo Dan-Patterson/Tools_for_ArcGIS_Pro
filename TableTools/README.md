@@ -21,4 +21,4 @@ Older
 
 **Notes**
 
-The toolbox (tbx) and the scripts in the *Scripts* folder, need to be copied to a local folder (retain the relative structure).  Alternatively, download and unzip the zip file into a local folder and load the toolbox in ArcGIS Pro
+The toolbox (*.atbx) and the scripts in the *Scripts* folder, need to be copied to a local folder (retain the relative structure).  Alternatively, download and unzip the zip file into a local folder and load the toolbox in ArcGIS Pro
