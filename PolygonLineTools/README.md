@@ -2,6 +2,9 @@
 
 Tools for working with polygon and polyline tools
 
+**Note**
+Most of the functionality has been incorporated in the numpy geometry links.  This is kept intact for historical aspects.
+
 **Last update 2018-09-12**
 
 Added split by area to the split poly* features tool.  I will update with images and explanation when I get a chance.
