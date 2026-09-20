@@ -1,6 +1,6 @@
 ## FreeTools ##
 
-Moved to
+The content of this link has been moved to
 
 [NumPy Geometry: main](https://github.com/Dan-Patterson/numpy_geometry)
 
